@@ -3,4 +3,6 @@
 - Botão aciona inversor
 - Desacoplamento inversor/modbus
 - Changelog
+- Desacoplamento bme280
+- Desacoplamento botão/teclado
 - 

@@ -23,8 +23,9 @@
 
 #include "inversor.h"
 #include "sens_tpu.h"
+#include "teclado.h"
 
-#define TAG_SNTP    "SNTP"
+#define TAG_SNTP "SNTP"
 
 void rele_init(void) {
     gpio_reset_pin(RELE_1);
@@ -46,14 +47,6 @@ void rele_init(void) {
     gpio_reset_pin(LED_BR);
     gpio_set_direction(LED_BR, GPIO_MODE_OUTPUT);
     gpio_set_level(LED_BR, 0);
-}
-
-void botao_init(void) {
-    gpio_reset_pin(BOTAO_ESC);
-    gpio_set_direction(BOTAO_ESC, GPIO_MODE_INPUT);
-
-    gpio_reset_pin(BOTAO_ENT);
-    gpio_set_direction(BOTAO_ENT, GPIO_MODE_INPUT);
 }
 
 void rele_start_stop(uint8_t rele, bool estado) {
@@ -120,7 +113,7 @@ void aciona_aspersor (uint16_t tempo) {
     motor_definir_velocidade(3470);
 
     for (uint16_t i = 0; i < (tempo * 10); i++) {
-        if (!gpio_get_level(BOTAO_ESC))
+        if (botao_esc())
             break;
         delay_ms(100);
     }
@@ -144,6 +137,8 @@ void app_main(void) {
         ret = nvs_flash_init();
     }
     ESP_ERROR_CHECK(ret);
+
+    botao_init();
 
     // Initialize I2C parameters
     i2c_master_init();
@@ -169,14 +164,14 @@ void app_main(void) {
     uint8_t s_ant = 0;
 
     while(1) {
-        if (!gpio_get_level(BOTAO_ENT)) {
+        if (botao_ent()) {
             // RELE_ACIONA_LIGA;
             // RELE_DESACIONA_DESL;
             // vTaskDelay(100 / portTICK_PERIOD_MS);
             // RELE_ACIONA_DESL;
 
             aciona_aspersor(120);
-        } else if (!gpio_get_level(BOTAO_ESC)) {
+        } else if (botao_esc()) {
             // RELE_DESACIONA_LIGA;
             // RELE_ACIONA_DESL;
             // vTaskDelay(100 / portTICK_PERIOD_MS);
