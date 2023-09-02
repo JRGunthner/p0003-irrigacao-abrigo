@@ -1,28 +1,6 @@
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "freertos/event_groups.h"
-#include "freertos/semphr.h"
-#include "freertos/queue.h"
-
-#include "esp_system.h"
-#include "esp_event.h"
-#include "esp_log.h"
-#include "esp_attr.h"
-#include "esp_sntp.h"
-#include "esp_netif.h"
-#include "esp_err.h"
-
-#include "driver/gpio.h"
-
+#include "inversor.h"
 #include "modbus_params.h"
 #include "mbcontroller.h"
-
-#include "inversor.h"
-
-void inversor_init(void) {
-    printf("Inversor init\r\n");
-}
-
 
 #define MB_PORT_NUM  2
 #define MB_BAUD_RATE 19200

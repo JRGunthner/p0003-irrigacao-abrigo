@@ -1,9 +1,3 @@
-#include <stdio.h>
-#include <stddef.h>
-#include <string.h>
-#include <time.h>
-#include <sys/time.h>
-
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/event_groups.h"
@@ -30,25 +24,11 @@
 
 #include "inversor.h"
 
-#define TAG_BME280 "BME280"
-
-static const char *TAG = "SNTP";
-
-#define SDA_PIN GPIO_NUM_1
-#define SCL_PIN GPIO_NUM_2
+#define TAG_BME280  "BME280"
+#define TAG_SNTP    "SNTP"
 
 #define I2C_MASTER_ACK  0
 #define I2C_MASTER_NACK 1
-
-#define RELE_1 GPIO_NUM_8
-#define RELE_2 GPIO_NUM_19
-#define RELE_3 GPIO_NUM_20
-#define RELE_4 GPIO_NUM_3
-
-#define BOTAO_ESC GPIO_NUM_14
-#define BOTAO_ENT GPIO_NUM_13
-
-#define LED_BR GPIO_NUM_5
 
 void rele_init(void) {
     gpio_reset_pin(RELE_1);
@@ -98,7 +78,7 @@ static void obtain_time(void);
 static void initialize_sntp(void);
 
 void time_sync_notification_cb(struct timeval *tv) {
-    ESP_LOGI(TAG, "Notification of a time synchronization event");
+    ESP_LOGI(TAG_SNTP, "Notification of a time synchronization event");
 }
 
 struct tm data;
@@ -310,15 +290,12 @@ void Publisher_Task(void *params) {
 ////////////////////////////////////////////////////////////////
 
 void app_main(void) {
-    // Initialize memory
     esp_err_t ret = nvs_flash_init();
     if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
         ESP_ERROR_CHECK(nvs_flash_erase());
         ret = nvs_flash_init();
     }
     ESP_ERROR_CHECK(ret);
-
-    inversor_init();
 
     // Initialize I2C parameters
     i2c_master_init();
@@ -418,7 +395,7 @@ static void obtain_time(void) {
     int retry = 0;
     const int retry_count = 20;
     while (sntp_get_sync_status() == SNTP_SYNC_STATUS_RESET && ++retry < retry_count) {
-        ESP_LOGI(TAG, "Esperando pela hora do servidor... (%d/%d)", retry, retry_count);
+        ESP_LOGI(TAG_SNTP, "Esperando pela hora do servidor... (%d/%d)", retry, retry_count);
         vTaskDelay(2000 / portTICK_PERIOD_MS);
     }
     time(&now);
