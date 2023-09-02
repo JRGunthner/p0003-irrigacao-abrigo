@@ -77,18 +77,6 @@
 #include <linux/types.h>
 #include <linux/math64.h>
 #define BME280_64BITSUPPORT_PRESENT
-/* singed integer type*/
-typedef	int8_t s8;/**< used for signed 8bit */
-typedef	int16_t s16;/**< used for signed 16bit */
-typedef	int32_t s32;/**< used for signed 32bit */
-typedef	int64_t s64;/**< used for signed 64bit */
-
-typedef	u_int8_t u8;/**< used for unsigned 8bit */
-typedef	u_int16_t u16;/**< used for unsigned 16bit */
-typedef	u_int32_t u32;/**< used for unsigned 32bit */
-typedef	u_int64_t u64;/**< used for unsigned 64bit */
-
-
 
 #else /* ! __KERNEL__ */
 /**********************************************************
@@ -107,16 +95,16 @@ typedef	u_int64_t u64;/**< used for unsigned 64bit */
 /************************************************/
 
 /*unsigned integer types*/
-typedef	uint8_t u8;/**< used for unsigned 8bit */
-typedef	uint16_t u16;/**< used for unsigned 16bit */
-typedef	uint32_t u32;/**< used for unsigned 32bit */
-typedef	uint64_t u64;/**< used for unsigned 64bit */
+typedef	uint8_t uint8_t;/**< used for unsigned 8bit */
+typedef	uint16_t uint16_t;/**< used for unsigned 16bit */
+typedef	uint32_t uint32_t;/**< used for unsigned 32bit */
+typedef	uint64_t uint64_t;/**< used for unsigned 64bit */
 
 /*signed integer types*/
-typedef	int8_t s8;/**< used for signed 8bit */
-typedef	int16_t s16;/**< used for signed 16bit */
-typedef	int32_t s32;/**< used for signed 32bit */
-typedef	int64_t s64;/**< used for signed 64bit */
+typedef	int8_t int8_t;/**< used for signed 8bit */
+typedef	int16_t int16_t;/**< used for signed 16bit */
+typedef	int32_t int32_t;/**< used for signed 32bit */
+typedef	int64_t int64_t;/**< used for signed 64bit */
 #define BME280_64BITSUPPORT_PRESENT
 /************************************************
  * compiler is C99 C standard
@@ -131,16 +119,16 @@ which is used to fixed the integer size*/
 /************************************************/
 
 /*unsigned integer types*/
-typedef	uint8_t u8;/**< used for unsigned 8bit */
-typedef	uint16_t u16;/**< used for unsigned 16bit */
-typedef	uint32_t u32;/**< used for unsigned 32bit */
-typedef	uint64_t u64;/**< used for unsigned 64bit */
+typedef	uint8_t uint8_t;/**< used for unsigned 8bit */
+typedef	uint16_t uint16_t;/**< used for unsigned 16bit */
+typedef	uint32_t uint32_t;/**< used for unsigned 32bit */
+typedef	uint64_t uint64_t;/**< used for unsigned 64bit */
 
 /*signed integer types*/
-typedef int8_t s8;/**< used for signed 8bit */
-typedef	int16_t s16;/**< used for signed 16bit */
-typedef	int32_t s32;/**< used for signed 32bit */
-typedef	int64_t s64;/**< used for signed 64bit */
+typedef int8_t int8_t;/**< used for signed 8bit */
+typedef	int16_t int16_t;/**< used for signed 16bit */
+typedef	int32_t int32_t;/**< used for signed 32bit */
+typedef	int64_t int64_t;/**< used for signed 64bit */
 #define BME280_64BITSUPPORT_PRESENT
 /************************************************
  * compiler is C89 or other C standard
@@ -161,17 +149,17 @@ typedef	int64_t s64;/**< used for signed 64bit */
 #ifdef MACHINE_16_BIT
 #include <limits.h>
 /*signed integer types*/
-typedef	signed char  s8;/**< used for signed 8bit */
-typedef	signed short int s16;/**< used for signed 16bit */
-typedef	signed long int s32;/**< used for signed 32bit */
+typedef	signed char  int8_t;/**< used for signed 8bit */
+typedef	signed short int int16_t;/**< used for signed 16bit */
+typedef	signed long int int32_t;/**< used for signed 32bit */
 
 #if defined(LONG_MAX) && LONG_MAX == 0x7fffffffffffffffL
-typedef long int s64;/**< used for signed 64bit */
-typedef unsigned long int u64;/**< used for unsigned 64bit */
+typedef long int int64_t;/**< used for signed 64bit */
+typedef unsigned long int uint64_t;/**< used for unsigned 64bit */
 #define BME280_64BITSUPPORT_PRESENT
 #elif defined(LLONG_MAX) && (LLONG_MAX == 0x7fffffffffffffffLL)
-typedef long long int s64;/**< used for signed 64bit */
-typedef unsigned long long int u64;/**< used for unsigned 64bit */
+typedef long long int int64_t;/**< used for signed 64bit */
+typedef unsigned long long int uint64_t;/**< used for unsigned 64bit */
 #define BME280_64BITSUPPORT_PRESENT
 #else
 #warning Either the correct data type for signed 64 bit integer \
@@ -179,28 +167,28 @@ could not be found, or 64 bit integers are not supported in your environment.
 #warning The API will only offer 32 bit pressure calculation.This will \
 slightly impede accuracy(noise of ~1 pascal RMS will be added to output).
 #warning If 64 bit integers are supported on your platform, \
-please set s64 manually and "#define(BME280_64BITSUPPORT_PRESENT)" manually.
+please set int64_t manually and "#define(BME280_64BITSUPPORT_PRESENT)" manually.
 #endif
 
 /*unsigned integer types*/
-typedef	unsigned char u8;/**< used for unsigned 8bit */
-typedef	unsigned short int u16;/**< used for unsigned 16bit */
-typedef	unsigned long int u32;/**< used for unsigned 32bit */
+typedef	unsigned char uint8_t;/**< used for unsigned 8bit */
+typedef	unsigned short int uint16_t;/**< used for unsigned 16bit */
+typedef	unsigned long int uint32_t;/**< used for unsigned 32bit */
 
 /* If your machine support 32 bit
 define the MACHINE_32_BIT*/
 #elif defined MACHINE_32_BIT
 /*signed integer types*/
-typedef	signed char  s8;/**< used for signed 8bit */
-typedef	signed short int s16;/**< used for signed 16bit */
-typedef	signed int s32;/**< used for signed 32bit */
-typedef	signed long long int s64;/**< used for signed 64bit */
+typedef	signed char  int8_t;/**< used for signed 8bit */
+typedef	signed short int int16_t;/**< used for signed 16bit */
+typedef	signed int int32_t;/**< used for signed 32bit */
+typedef	signed long long int int64_t;/**< used for signed 64bit */
 
 /*unsigned integer types*/
-typedef	unsigned char u8;/**< used for unsigned 8bit */
-typedef	unsigned short int u16;/**< used for unsigned 16bit */
-typedef	unsigned int u32;/**< used for unsigned 32bit */
-typedef	unsigned long long int u64;/**< used for unsigned 64bit */
+typedef	unsigned char uint8_t;/**< used for unsigned 8bit */
+typedef	unsigned short int uint16_t;/**< used for unsigned 16bit */
+typedef	unsigned int uint32_t;/**< used for unsigned 32bit */
+typedef	unsigned long long int uint64_t;/**< used for unsigned 64bit */
 /*! @brief
  *	If your machine support 64 bit
  *	define the MACHINE_64_BIT
@@ -211,16 +199,16 @@ typedef	unsigned long long int u64;/**< used for unsigned 64bit */
 define the MACHINE_64_BIT*/
 #elif defined MACHINE_64_BIT
 /*signed integer types*/
-typedef	signed char  s8;/**< used for signed 8bit */
-typedef	signed short int s16;/**< used for signed 16bit */
-typedef	signed int s32;/**< used for signed 32bit */
-typedef	signed long int s64;/**< used for signed 64bit */
+typedef	signed char  int8_t;/**< used for signed 8bit */
+typedef	signed short int int16_t;/**< used for signed 16bit */
+typedef	signed int int32_t;/**< used for signed 32bit */
+typedef	signed long int int64_t;/**< used for signed 64bit */
 
 /*unsigned integer types*/
-typedef	unsigned char u8;/**< used for unsigned 8bit */
-typedef	unsigned short int u16;/**< used for unsigned 16bit */
-typedef	unsigned int u32;/**< used for unsigned 32bit */
-typedef	unsigned long int u64;/**< used for unsigned 64bit */
+typedef	unsigned char uint8_t;/**< used for unsigned 8bit */
+typedef	unsigned short int uint16_t;/**< used for unsigned 16bit */
+typedef	unsigned int uint32_t;/**< used for unsigned 32bit */
+typedef	unsigned long int uint64_t;/**< used for unsigned 64bit */
 #define BME280_64BITSUPPORT_PRESENT
 
 #else
@@ -245,17 +233,17 @@ define the MACHINE_16_BIT*/
 #ifdef MACHINE_16_BIT
 #include <limits.h>
 /*signed integer types*/
-typedef	signed char  s8;/**< used for signed 8bit */
-typedef	signed short int s16;/**< used for signed 16bit */
-typedef	signed long int s32;/**< used for signed 32bit */
+typedef	signed char  int8_t;/**< used for signed 8bit */
+typedef	signed short int int16_t;/**< used for signed 16bit */
+typedef	signed long int int32_t;/**< used for signed 32bit */
 
 #if defined(LONG_MAX) && LONG_MAX == 0x7fffffffffffffffL
-typedef long int s64;/**< used for signed 64bit */
-typedef unsigned long int u64;/**< used for unsigned 64bit */
+typedef long int int64_t;/**< used for signed 64bit */
+typedef unsigned long int uint64_t;/**< used for unsigned 64bit */
 #define BME280_64BITSUPPORT_PRESENT
 #elif defined(LLONG_MAX) && (LLONG_MAX == 0x7fffffffffffffffLL)
-typedef long long int s64;/**< used for signed 64bit */
-typedef unsigned long long int u64;/**< used for unsigned 64bit */
+typedef long long int int64_t;/**< used for signed 64bit */
+typedef unsigned long long int uint64_t;/**< used for unsigned 64bit */
 #define BME280_64BITSUPPORT_PRESENT
 #else
 #warning Either the correct data type for signed 64 bit integer \
@@ -263,44 +251,44 @@ could not be found, or 64 bit integers are not supported in your environment.
 #warning The API will only offer 32 bit pressure calculation.This will \
 slightly impede accuracy(noise of ~1 pascal RMS will be added to output).
 #warning If 64 bit integers are supported on your platform, \
-please set s64 manually and "#define(BME280_64BITSUPPORT_PRESENT)" manually.
+please set int64_t manually and "#define(BME280_64BITSUPPORT_PRESENT)" manually.
 #endif
 
 /*unsigned integer types*/
-typedef	unsigned char u8;/**< used for unsigned 8bit */
-typedef	unsigned short int u16;/**< used for unsigned 16bit */
-typedef	unsigned long int u32;/**< used for unsigned 32bit */
+typedef	unsigned char uint8_t;/**< used for unsigned 8bit */
+typedef	unsigned short int uint16_t;/**< used for unsigned 16bit */
+typedef	unsigned long int uint32_t;/**< used for unsigned 32bit */
 
 /*! @brief If your machine support 32 bit
 define the MACHINE_32_BIT*/
 #elif defined MACHINE_32_BIT
 /*signed integer types*/
-typedef	signed char  s8;/**< used for signed 8bit */
-typedef	signed short int s16;/**< used for signed 16bit */
-typedef	signed int s32;/**< used for signed 32bit */
-typedef	signed long long int s64;/**< used for signed 64bit */
+typedef	signed char  int8_t;/**< used for signed 8bit */
+typedef	signed short int int16_t;/**< used for signed 16bit */
+typedef	signed int int32_t;/**< used for signed 32bit */
+typedef	signed long long int int64_t;/**< used for signed 64bit */
 
 /*unsigned integer types*/
-typedef	unsigned char u8;/**< used for unsigned 8bit */
-typedef	unsigned short int u16;/**< used for unsigned 16bit */
-typedef	unsigned int u32;/**< used for unsigned 32bit */
-typedef	unsigned long long int u64;/**< used for unsigned 64bit */
+typedef	unsigned char uint8_t;/**< used for unsigned 8bit */
+typedef	unsigned short int uint16_t;/**< used for unsigned 16bit */
+typedef	unsigned int uint32_t;/**< used for unsigned 32bit */
+typedef	unsigned long long int uint64_t;/**< used for unsigned 64bit */
 #define BME280_64BITSUPPORT_PRESENT
 
 /* If your machine support 64 bit
 define the MACHINE_64_BIT*/
 #elif defined MACHINE_64_BIT
 /*signed integer types*/
-typedef	signed char  s8;/**< used for signed 8bit */
-typedef	signed short int s16;/**< used for signed 16bit */
-typedef	signed int s32;/**< used for signed 32bit */
-typedef	signed long int s64;/**< used for signed 64bit */
+typedef	signed char  int8_t;/**< used for signed 8bit */
+typedef	signed short int int16_t;/**< used for signed 16bit */
+typedef	signed int int32_t;/**< used for signed 32bit */
+typedef	signed long int int64_t;/**< used for signed 64bit */
 
 /*unsigned integer types*/
-typedef	unsigned char u8;/**< used for unsigned 8bit */
-typedef	unsigned short int u16;/**< used for unsigned 16bit */
-typedef	unsigned int u32;/**< used for unsigned 32bit */
-typedef	unsigned long int u64;/**< used for unsigned 64bit */
+typedef	unsigned char uint8_t;/**< used for unsigned 8bit */
+typedef	unsigned short int uint16_t;/**< used for unsigned 16bit */
+typedef	unsigned int uint32_t;/**< used for unsigned 32bit */
+typedef	unsigned long int uint64_t;/**< used for unsigned 64bit */
 #define BME280_64BITSUPPORT_PRESENT
 
 #else
@@ -333,21 +321,21 @@ define the data types manually
 	@note This includes types of parameters. This example shows the
 	configuration for an SPI bus link.
     If your communication function looks like this:
-    write_my_bus_xy(u8 device_addr, u8 register_addr,
-    u8 * data, u8 length);
+    write_my_bus_xy(uint8_t device_addr, uint8_t register_addr,
+    uint8_t * data, uint8_t length);
     The BME280_WR_FUNC_PTR would equal:
-	BME280_WR_FUNC_PTR s8 (* bus_write)(u8,
-    u8, u8 *, u8)
+	BME280_WR_FUNC_PTR int8_t (* bus_write)(uint8_t,
+    uint8_t, uint8_t *, uint8_t)
     Parameters can be mixed as needed refer to the
     refer BME280_BUS_WRITE_FUNC  macro.
 */
 /** defines the return parameter type of the BME280_WR_FUNCTION */
-#define BME280_BUS_WR_RETURN_TYPE s8
+#define BME280_BUS_WR_RETURN_TYPE int8_t
 
 /* links the order of parameters defined in
 BME280_BUS_WR_PARAM_TYPE to function calls used inside the API*/
-#define BME280_BUS_WR_PARAM_TYPES u8, u8,\
-		u8 *, u8
+#define BME280_BUS_WR_PARAM_TYPES uint8_t, uint8_t,\
+		uint8_t *, uint8_t
 
 /* links the order of parameters defined in
 BME280_BUS_WR_PARAM_TYPE to function calls used inside the API*/
@@ -377,12 +365,12 @@ register_data, wr_len) bus_write(device_addr, register_addr,\
 */
 /*defines the return parameter type of the BME280_RD_FUNCTION
 */
-#define BME280_BUS_RD_RETURN_TYPE s8
+#define BME280_BUS_RD_RETURN_TYPE int8_t
 
 /**\brief defines the calling parameter types of the BME280_RD_FUNCTION
 */
-#define BME280_BUS_RD_PARAM_TYPES (u8, u8,\
-		u8 *, u8)
+#define BME280_BUS_RD_PARAM_TYPES (uint8_t, uint8_t,\
+		uint8_t *, uint8_t)
 
 /* links the order of parameters defined in \
 BME280_BUS_RD_PARAM_TYPE to function calls used inside the API
@@ -403,7 +391,7 @@ BME280_BUS_RD_PARAM_TYPE to function calls used inside the API
 
 /* defines the calling parameter types of the BME280_DELAY_FUNCTION
 */
-#define BME280_DELAY_PARAM_TYPES u16
+#define BME280_DELAY_PARAM_TYPES uint16_t
 /***************************************************************/
 /**\name	GET AND SET BITSLICE FUNCTIONS       */
 /***************************************************************/
@@ -422,7 +410,7 @@ BME280_BUS_RD_PARAM_TYPE to function calls used inside the API
 /***************************************************************/
 /* Constants */
 #define BME280_NULL                          (0)
-#define BME280_RETURN_FUNCTION_TYPE          s8
+#define BME280_RETURN_FUNCTION_TYPE          int8_t
 /* shift definitions*/
 #define BME280_SHIFT_BIT_POSITION_BY_01_BIT			(1)
 #define BME280_SHIFT_BIT_POSITION_BY_02_BITS			(2)
@@ -462,13 +450,13 @@ BME280_BUS_RD_PARAM_TYPE to function calls used inside the API
 /****************************************************/
 /**\name	ERROR CODE DEFINITIONS  */
 /***************************************************/
-#define	SUCCESS					((u8)0)
-#define E_BME280_NULL_PTR       ((s8)-127)
-#define E_BME280_COMM_RES       ((s8)-1)
-#define E_BME280_OUT_OF_RANGE   ((s8)-2)
-#define ERROR					((s8)-1)
-#define BME280_CHIP_ID_READ_FAIL	((s8)-1)
-#define BME280_CHIP_ID_READ_SUCCESS	((u8)0)
+#define	SUCCESS					((uint8_t)0)
+#define E_BME280_NULL_PTR       ((int8_t)-127)
+#define E_BME280_COMM_RES       ((int8_t)-1)
+#define E_BME280_OUT_OF_RANGE   ((int8_t)-2)
+#define ERROR					((int8_t)-1)
+#define BME280_CHIP_ID_READ_FAIL	((int8_t)-1)
+#define BME280_CHIP_ID_READ_SUCCESS	((uint8_t)0)
 
 /****************************************************/
 /**\name	CHIP ID DEFINITIONS  */
@@ -761,14 +749,14 @@ FOR PRESSURE AND TEMPERATURE DATA  */
 /**\name	BUS READ AND WRITE FUNCTION POINTERS */
 /***************************************************/
 #define BME280_WR_FUNC_PTR\
-		s8 (*bus_write)(u8, u8,\
-		u8 *, u8)
+		int8_t (*bus_write)(uint8_t, uint8_t,\
+		uint8_t *, uint8_t)
 
 #define BME280_RD_FUNC_PTR\
-		s8 (*bus_read)(u8, u8,\
-		u8 *, u8)
+		int8_t (*bus_read)(uint8_t, uint8_t,\
+		uint8_t *, uint8_t)
 
-#define BME280_MDELAY_DATA_TYPE u32
+#define BME280_MDELAY_DATA_TYPE uint32_t
 
 #define	BME280_3MS_DELAY	(3)
 #define BME280_REGISTER_READ_DELAY (1)
@@ -779,27 +767,27 @@ FOR PRESSURE AND TEMPERATURE DATA  */
  * @brief This structure holds all device specific calibration parameters
  */
 struct bme280_calibration_param_t {
-	u16 dig_T1;/**<calibration T1 data*/
-	s16 dig_T2;/**<calibration T2 data*/
-	s16 dig_T3;/**<calibration T3 data*/
-	u16 dig_P1;/**<calibration P1 data*/
-	s16 dig_P2;/**<calibration P2 data*/
-	s16 dig_P3;/**<calibration P3 data*/
-	s16 dig_P4;/**<calibration P4 data*/
-	s16 dig_P5;/**<calibration P5 data*/
-	s16 dig_P6;/**<calibration P6 data*/
-	s16 dig_P7;/**<calibration P7 data*/
-	s16 dig_P8;/**<calibration P8 data*/
-	s16 dig_P9;/**<calibration P9 data*/
+	uint16_t dig_T1;/**<calibration T1 data*/
+	int16_t dig_T2;/**<calibration T2 data*/
+	int16_t dig_T3;/**<calibration T3 data*/
+	uint16_t dig_P1;/**<calibration P1 data*/
+	int16_t dig_P2;/**<calibration P2 data*/
+	int16_t dig_P3;/**<calibration P3 data*/
+	int16_t dig_P4;/**<calibration P4 data*/
+	int16_t dig_P5;/**<calibration P5 data*/
+	int16_t dig_P6;/**<calibration P6 data*/
+	int16_t dig_P7;/**<calibration P7 data*/
+	int16_t dig_P8;/**<calibration P8 data*/
+	int16_t dig_P9;/**<calibration P9 data*/
 
-	u8  dig_H1;/**<calibration H1 data*/
-	s16 dig_H2;/**<calibration H2 data*/
-	u8  dig_H3;/**<calibration H3 data*/
-	s16 dig_H4;/**<calibration H4 data*/
-	s16 dig_H5;/**<calibration H5 data*/
-	s8  dig_H6;/**<calibration H6 data*/
+	uint8_t  dig_H1;/**<calibration H1 data*/
+	int16_t dig_H2;/**<calibration H2 data*/
+	uint8_t  dig_H3;/**<calibration H3 data*/
+	int16_t dig_H4;/**<calibration H4 data*/
+	int16_t dig_H5;/**<calibration H5 data*/
+	int8_t  dig_H6;/**<calibration H6 data*/
 
-	s32 t_fine;/**<calibration T_FINE data*/
+	int32_t t_fine;/**<calibration T_FINE data*/
 };
 /*!
  * @brief This structure holds BME280 initialization parameters
@@ -808,15 +796,15 @@ struct bme280_t {
 	struct bme280_calibration_param_t cal_param;
 	/**< calibration parameters*/
 
-	u8 chip_id;/**< chip id of the sensor*/
-	u8 dev_addr;/**< device address of the sensor*/
+	uint8_t chip_id;/**< chip id of the sensor*/
+	uint8_t dev_addr;/**< device address of the sensor*/
 
-	u8 oversamp_temperature;/**< temperature over sampling*/
-	u8 oversamp_pressure;/**< pressure over sampling*/
-	u8 oversamp_humidity;/**< humidity over sampling*/
-	u8 ctrl_hum_reg;/**< status of control humidity register*/
-	u8 ctrl_meas_reg;/**< status of control measurement register*/
-	u8 config_reg;/**< status of configuration register*/
+	uint8_t oversamp_temperature;/**< temperature over sampling*/
+	uint8_t oversamp_pressure;/**< pressure over sampling*/
+	uint8_t oversamp_humidity;/**< humidity over sampling*/
+	uint8_t ctrl_hum_reg;/**< status of control humidity register*/
+	uint8_t ctrl_meas_reg;/**< status of control measurement register*/
+	uint8_t config_reg;/**< status of configuration register*/
 
 	BME280_WR_FUNC_PTR;/**< bus write function pointer*/
 	BME280_RD_FUNC_PTR;/**< bus read function pointer*/
@@ -875,7 +863,7 @@ BME280_RETURN_FUNCTION_TYPE bme280_init(struct bme280_t *bme280);
  *
 */
 BME280_RETURN_FUNCTION_TYPE bme280_read_uncomp_temperature(
-s32 *v_uncomp_temperature_s32);
+int32_t *v_uncomp_temperature_s32);
 /**************************************************************/
 /**\name	FUNCTION FOR  INTIALIZATION TRUE TEMPERATURE */
 /**************************************************************/
@@ -892,7 +880,7 @@ s32 *v_uncomp_temperature_s32);
  *  @return Returns the actual temperature
  *
 */
-s32 bme280_compensate_temperature_int32(s32 v_uncomp_temperature_s32);
+int32_t bme280_compensate_temperature_int32(int32_t v_uncomp_temperature_s32);
 /*!
  * @brief Reads actual temperature from uncompensated temperature
  * @note Returns the value with 500LSB/DegC centred around 24 DegC
@@ -903,11 +891,11 @@ s32 bme280_compensate_temperature_int32(s32 v_uncomp_temperature_s32);
  *
  *
  *
- *  @return Return the actual temperature as s16 output
+ *  @return Return the actual temperature as int16_t output
  *
 */
-s16 bme280_compensate_temperature_int32_sixteen_bit_output(
-s32 v_uncomp_temperature_s32);
+int16_t bme280_compensate_temperature_int32_sixteen_bit_output(
+int32_t v_uncomp_temperature_s32);
 /**************************************************************/
 /**\name	FUNCTION FOR  INTIALIZATION UNCOMPENSATED PRESSURE */
 /**************************************************************/
@@ -931,7 +919,7 @@ s32 v_uncomp_temperature_s32);
  *
 */
 BME280_RETURN_FUNCTION_TYPE bme280_read_uncomp_pressure(
-s32 *v_uncomp_pressure_s32);
+int32_t *v_uncomp_pressure_s32);
 /**************************************************************/
 /**\name	FUNCTION FOR  INTIALIZATION TRUE PRESSURE */
 /**************************************************************/
@@ -947,10 +935,10 @@ s32 *v_uncomp_pressure_s32);
  *
  *
  *
- *  @return Return the actual pressure output as u32
+ *  @return Return the actual pressure output as uint32_t
  *
 */
-u32 bme280_compensate_pressure_int32(s32 v_uncomp_pressure_s32);
+uint32_t bme280_compensate_pressure_int32(int32_t v_uncomp_pressure_s32);
 /**************************************************************/
 /**\name	FUNCTION FOR  INTIALIZATION UNCOMPENSATED HUMIDITY */
 /**************************************************************/
@@ -973,7 +961,7 @@ u32 bme280_compensate_pressure_int32(s32 v_uncomp_pressure_s32);
  *
 */
 BME280_RETURN_FUNCTION_TYPE bme280_read_uncomp_humidity(
-s32 *v_uncomp_humidity_s32);
+int32_t *v_uncomp_humidity_s32);
 /**************************************************************/
 /**\name	FUNCTION FOR  INTIALIZATION RELATIVE HUMIDITY */
 /**************************************************************/
@@ -988,10 +976,10 @@ s32 *v_uncomp_humidity_s32);
  *
  *  @param  v_uncomp_humidity_s32: value of uncompensated humidity
  *
- *  @return Return the actual relative humidity output as u32
+ *  @return Return the actual relative humidity output as uint32_t
  *
 */
-u32 bme280_compensate_humidity_int32(s32 v_uncomp_humidity_s32);
+uint32_t bme280_compensate_humidity_int32(int32_t v_uncomp_humidity_s32);
 /*!
  * @brief Reads actual humidity from uncompensated humidity
  * @note Returns the value in %rH as unsigned 16bit integer
@@ -1003,11 +991,11 @@ u32 bme280_compensate_humidity_int32(s32 v_uncomp_humidity_s32);
  *  @param v_uncomp_humidity_s32: value of uncompensated humidity
  *
  *
- *  @return Return the actual relative humidity output as u16
+ *  @return Return the actual relative humidity output as uint16_t
  *
 */
-u16 bme280_compensate_humidity_int32_sixteen_bit_output(
-s32 v_uncomp_humidity_s32);
+uint16_t bme280_compensate_humidity_int32_sixteen_bit_output(
+int32_t v_uncomp_humidity_s32);
 /**************************************************************/
 /**\name	FUNCTION FOR  INTIALIZATION UNCOMPENSATED PRESSURE,
  TEMPERATURE AND HUMIDITY */
@@ -1032,8 +1020,8 @@ s32 v_uncomp_humidity_s32);
  *
 */
 BME280_RETURN_FUNCTION_TYPE bme280_read_uncomp_pressure_temperature_humidity(
-s32 *v_uncomp_pressure_s32,
-s32 *v_uncomp_temperature_s32, s32 *v_uncomp_humidity_s32);
+int32_t *v_uncomp_pressure_s32,
+int32_t *v_uncomp_temperature_s32, int32_t *v_uncomp_humidity_s32);
 /**************************************************************/
 /**\name	FUNCTION FOR TRUE UNCOMPENSATED PRESSURE,
  TEMPERATURE AND HUMIDITY */
@@ -1056,7 +1044,7 @@ s32 *v_uncomp_temperature_s32, s32 *v_uncomp_humidity_s32);
  *
 */
 BME280_RETURN_FUNCTION_TYPE bme280_read_pressure_temperature_humidity(
-u32 *v_pressure_u32, s32 *v_temperature_s32, u32 *v_humidity_u32);
+uint32_t *v_pressure_u32, int32_t *v_temperature_s32, uint32_t *v_humidity_u32);
 /**************************************************************/
 /**\name	FUNCTION FOR CALIBRATION */
 /**************************************************************/
@@ -1118,7 +1106,7 @@ BME280_RETURN_FUNCTION_TYPE bme280_get_calib_param(void);
  *
 */
 BME280_RETURN_FUNCTION_TYPE bme280_get_oversamp_temperature(
-u8 *v_value_u8);
+uint8_t *v_value_u8);
 /*!
  *	@brief This API is used to set
  *	the temperature oversampling setting in the register 0xF4
@@ -1145,7 +1133,7 @@ u8 *v_value_u8);
  *
 */
 BME280_RETURN_FUNCTION_TYPE bme280_set_oversamp_temperature(
-u8 v_value_u8);
+uint8_t v_value_u8);
 /**************************************************************/
 /**\name	FUNCTION FOR PRESSURE OVER SAMPLING */
 /**************************************************************/
@@ -1175,7 +1163,7 @@ u8 v_value_u8);
  *
 */
 BME280_RETURN_FUNCTION_TYPE bme280_get_oversamp_pressure(
-u8 *v_value_u8);
+uint8_t *v_value_u8);
 /*!
  *	@brief This API is used to set
  *	the pressure oversampling setting in the register 0xF4
@@ -1202,7 +1190,7 @@ u8 *v_value_u8);
  *
 */
 BME280_RETURN_FUNCTION_TYPE bme280_set_oversamp_pressure(
-u8 v_value_u8);
+uint8_t v_value_u8);
 /**************************************************************/
 /**\name	FUNCTION FOR HUMIDITY OVER SAMPLING */
 /**************************************************************/
@@ -1231,7 +1219,7 @@ u8 v_value_u8);
  *
  *
 */
-BME280_RETURN_FUNCTION_TYPE bme280_get_oversamp_humidity(u8 *v_value_u8);
+BME280_RETURN_FUNCTION_TYPE bme280_get_oversamp_humidity(uint8_t *v_value_u8);
 /*!
  *	@brief This API is used to set
  *	the humidity oversampling setting in the register 0xF2
@@ -1272,7 +1260,7 @@ BME280_RETURN_FUNCTION_TYPE bme280_get_oversamp_humidity(u8 *v_value_u8);
  *
 */
 BME280_RETURN_FUNCTION_TYPE bme280_set_oversamp_humidity(
-u8 v_value_u8);
+uint8_t v_value_u8);
 /**************************************************************/
 /**\name	FUNCTION FOR POWER MODE*/
 /**************************************************************/
@@ -1295,7 +1283,7 @@ u8 v_value_u8);
  *
  *
 */
-BME280_RETURN_FUNCTION_TYPE bme280_get_power_mode(u8 *v_power_mode_u8);
+BME280_RETURN_FUNCTION_TYPE bme280_get_power_mode(uint8_t *v_power_mode_u8);
 /*!
  *	@brief This API used to set the
  *	Operational Mode from the sensor in the register 0xF4 bit 0 and 1
@@ -1315,7 +1303,7 @@ BME280_RETURN_FUNCTION_TYPE bme280_get_power_mode(u8 *v_power_mode_u8);
  *
  *
 */
-BME280_RETURN_FUNCTION_TYPE bme280_set_power_mode(u8 v_power_mode_u8);
+BME280_RETURN_FUNCTION_TYPE bme280_set_power_mode(uint8_t v_power_mode_u8);
 /**************************************************************/
 /**\name	FUNCTION FOR SOFT RESET*/
 /**************************************************************/
@@ -1358,7 +1346,7 @@ BME280_RETURN_FUNCTION_TYPE bme280_set_soft_rst(void);
  *
  *
 */
-BME280_RETURN_FUNCTION_TYPE bme280_get_spi3(u8 *v_enable_disable_u8);
+BME280_RETURN_FUNCTION_TYPE bme280_get_spi3(uint8_t *v_enable_disable_u8);
 /*!
  *	@brief This API used to set the sensor
  *	SPI mode(communication type) in the register 0xF5 bit 0
@@ -1379,7 +1367,7 @@ BME280_RETURN_FUNCTION_TYPE bme280_get_spi3(u8 *v_enable_disable_u8);
  *
  *
 */
-BME280_RETURN_FUNCTION_TYPE bme280_set_spi3(u8 v_enable_disable_u8);
+BME280_RETURN_FUNCTION_TYPE bme280_set_spi3(uint8_t v_enable_disable_u8);
 /**************************************************************/
 /**\name	FUNCTION FOR IIR FILTER*/
 /**************************************************************/
@@ -1405,7 +1393,7 @@ BME280_RETURN_FUNCTION_TYPE bme280_set_spi3(u8 v_enable_disable_u8);
  *
  *
 */
-BME280_RETURN_FUNCTION_TYPE bme280_get_filter(u8 *v_value_u8);
+BME280_RETURN_FUNCTION_TYPE bme280_get_filter(uint8_t *v_value_u8);
 /*!
  *	@brief This API is used to write filter setting
  *	in the register 0xF5 bit 3 and 4
@@ -1428,7 +1416,7 @@ BME280_RETURN_FUNCTION_TYPE bme280_get_filter(u8 *v_value_u8);
  *
  *
 */
-BME280_RETURN_FUNCTION_TYPE bme280_set_filter(u8 v_value_u8);
+BME280_RETURN_FUNCTION_TYPE bme280_set_filter(uint8_t v_value_u8);
 /**************************************************************/
 /**\name	FUNCTION FOR STANDBY DURATION*/
 /**************************************************************/
@@ -1455,7 +1443,7 @@ BME280_RETURN_FUNCTION_TYPE bme280_set_filter(u8 v_value_u8);
  *
  *
 */
-BME280_RETURN_FUNCTION_TYPE bme280_get_standby_durn(u8 *v_standby_durn_u8);
+BME280_RETURN_FUNCTION_TYPE bme280_get_standby_durn(uint8_t *v_standby_durn_u8);
 /*!
  *	@brief This API used to write the
  *	standby duration time from the sensor in the register 0xF5 bit 5 to 7
@@ -1489,7 +1477,7 @@ BME280_RETURN_FUNCTION_TYPE bme280_get_standby_durn(u8 *v_standby_durn_u8);
  *
  *
 */
-BME280_RETURN_FUNCTION_TYPE bme280_set_standby_durn(u8 v_standby_durn_u8);
+BME280_RETURN_FUNCTION_TYPE bme280_set_standby_durn(uint8_t v_standby_durn_u8);
 /**************************************************************/
 /**\name	FUNCTION FOR WORK MODE*/
 /**************************************************************/
@@ -1514,7 +1502,7 @@ BME280_RETURN_FUNCTION_TYPE bme280_set_standby_durn(u8 v_standby_durn_u8);
  *
  *
 */
-/*BME280_RETURN_FUNCTION_TYPE bme280_set_work_mode(u8 v_work_mode_u8);*/
+/*BME280_RETURN_FUNCTION_TYPE bme280_set_work_mode(uint8_t v_work_mode_u8);*/
 /**************************************************************/
 /**\name	FUNCTION FOR FORCE MODE DATA READ*/
 /**************************************************************/
@@ -1536,8 +1524,8 @@ BME280_RETURN_FUNCTION_TYPE bme280_set_standby_durn(u8 v_standby_durn_u8);
 */
 BME280_RETURN_FUNCTION_TYPE
 bme280_get_forced_uncomp_pressure_temperature_humidity(
-s32 *v_uncom_pressure_s32,
-s32 *v_uncom_temperature_s32, s32 *v_uncom_humidity_s32);
+int32_t *v_uncom_pressure_s32,
+int32_t *v_uncom_temperature_s32, int32_t *v_uncom_humidity_s32);
 /**************************************************************/
 /**\name	FUNCTION FOR COMMON READ AND WRITE */
 /**************************************************************/
@@ -1558,8 +1546,8 @@ s32 *v_uncom_temperature_s32, s32 *v_uncom_humidity_s32);
  *
  *
  */
-BME280_RETURN_FUNCTION_TYPE bme280_write_register(u8 v_addr_u8,
-u8 *v_data_u8, u8 v_len_u8);
+BME280_RETURN_FUNCTION_TYPE bme280_write_register(uint8_t v_addr_u8,
+uint8_t *v_data_u8, uint8_t v_len_u8);
 /*!
  * @brief
  *	This API reads the data from
@@ -1577,8 +1565,8 @@ u8 *v_data_u8, u8 v_len_u8);
  *
  *
  */
-BME280_RETURN_FUNCTION_TYPE bme280_read_register(u8 v_addr_u8,
-u8 *v_data_u8, u8 v_len_u8);
+BME280_RETURN_FUNCTION_TYPE bme280_read_register(uint8_t v_addr_u8,
+uint8_t *v_data_u8, uint8_t v_len_u8);
 /**************************************************************/
 /**\name	FUNCTION FOR FLOAT OUTPUT TEMPERATURE*/
 /**************************************************************/
@@ -1598,7 +1586,7 @@ u8 *v_data_u8, u8 v_len_u8);
  *
 */
 double bme280_compensate_temperature_double(
-s32 v_uncom_temperature_s32);
+int32_t v_uncom_temperature_s32);
 /**************************************************************/
 /**\name	FUNCTION FOR FLOAT OUTPUT PRESSURE*/
 /**************************************************************/
@@ -1615,7 +1603,7 @@ s32 v_uncom_temperature_s32);
  *  @return  Return the actual pressure in floating point
  *
 */
-double bme280_compensate_pressure_double(s32 v_uncom_pressure_s32);
+double bme280_compensate_pressure_double(int32_t v_uncom_pressure_s32);
 /**************************************************************/
 /**\name	FUNCTION FOR FLOAT OUTPUT HUMIDITY*/
 /**************************************************************/
@@ -1631,7 +1619,7 @@ double bme280_compensate_pressure_double(s32 v_uncom_pressure_s32);
  *  @return Return the actual humidity in floating point
  *
 */
-double bme280_compensate_humidity_double(s32 v_uncom_humidity_s32);
+double bme280_compensate_humidity_double(int32_t v_uncom_humidity_s32);
 #endif
 /**************************************************************/
 /**\name	FUNCTION FOR 64BIT OUTPUT PRESSURE*/
@@ -1650,10 +1638,10 @@ double bme280_compensate_humidity_double(s32 v_uncom_humidity_s32);
  *  @param  v_uncom_pressure_s32 : value of uncompensated temperature
  *
  *
- *  @return Return the actual pressure in u32
+ *  @return Return the actual pressure in uint32_t
  *
 */
-u32 bme280_compensate_pressure_int64(s32 v_uncom_pressure_s32);
+uint32_t bme280_compensate_pressure_int64(int32_t v_uncom_pressure_s32);
 /**************************************************************/
 /**\name	FUNCTION FOR 24BIT OUTPUT PRESSURE*/
 /**************************************************************/
@@ -1668,11 +1656,11 @@ u32 bme280_compensate_pressure_int64(s32 v_uncom_pressure_s32);
  *  @param v_uncom_pressure_s32 : value of uncompensated pressure
  *
  *
- *  @return the actual pressure in u32
+ *  @return the actual pressure in uint32_t
  *
 */
-u32 bme280_compensate_pressure_int64_twentyfour_bit_output(
-s32 v_uncom_pressure_s32);
+uint32_t bme280_compensate_pressure_int64_twentyfour_bit_output(
+int32_t v_uncom_pressure_s32);
 #endif
 /**************************************************************/
 /**\name	FUNCTION FOR WAIT PERIOD*/
@@ -1690,6 +1678,6 @@ s32 v_uncom_pressure_s32);
  *
  *
  */
-BME280_RETURN_FUNCTION_TYPE bme280_compute_wait_time(u8
+BME280_RETURN_FUNCTION_TYPE bme280_compute_wait_time(uint8_t
 *v_delaytime_u8);
 #endif
