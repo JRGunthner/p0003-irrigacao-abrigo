@@ -196,21 +196,6 @@ void app_main(void) {
             printf("%02d:%02d:%02d\r\n", data.tm_hour, data.tm_min, data.tm_sec);
             s_ant = data.tm_sec;
         }
-
-        uint16_t tempo_irrigacao = 150; // Em segundos
-
-        ligar_no_horario( 7, 0, 0, tempo_irrigacao);
-        ligar_no_horario( 8, 0, 0, tempo_irrigacao);
-        ligar_no_horario( 9, 0, 0, tempo_irrigacao);
-        ligar_no_horario(10, 0, 0, tempo_irrigacao);
-        ligar_no_horario(11, 0, 0, tempo_irrigacao);
-        ligar_no_horario(12, 0, 0, tempo_irrigacao);
-        ligar_no_horario(13, 0, 0, tempo_irrigacao);
-        ligar_no_horario(14, 0, 0, tempo_irrigacao);
-        ligar_no_horario(15, 0, 0, tempo_irrigacao);
-        ligar_no_horario(16, 0, 0, tempo_irrigacao);
-        ligar_no_horario(17, 0, 0, tempo_irrigacao);
-        ligar_no_horario(18, 0, 0, tempo_irrigacao);
     }
 }
 
