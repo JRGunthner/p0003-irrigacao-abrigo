@@ -24,8 +24,11 @@
 #include "inversor.h"
 #include "sens_tpu.h"
 #include "teclado.h"
+#include "wifi.h"
 
 #define TAG_SNTP "SNTP"
+
+xSemaphoreHandle conexao_wifi_semaphore;
 
 void rele_init(void) {
     gpio_reset_pin(RELE_1);
@@ -132,7 +135,6 @@ void ligar_no_horario(uint8_t hh, uint8_t mm, uint8_t ss, uint16_t tempo) {
         aciona_aspersor(tempo);
 }
 
-
 void main_task(void *params) {
     uint8_t s_ant = 0;
 
@@ -197,6 +199,15 @@ void main_task(void *params) {
     }
 }
 
+void conectadoWifi(void *params) {
+    while (1) {
+        if (xSemaphoreTake(conexao_wifi_semaphore, portMAX_DELAY)) {
+            printf("Conectado ao WiFi!\r\n");
+        }
+    }
+    vTaskDelete(NULL);
+}
+
 void app_main(void) {
     esp_err_t ret = nvs_flash_init();
     if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
@@ -210,6 +221,11 @@ void app_main(void) {
     i2c_master_init();
     ESP_ERROR_CHECK(master_init());
     rele_init();
+
+    conexao_wifi_semaphore = xSemaphoreCreateBinary();
+    wifi_start();
+
+    xTaskCreate(&conectadoWifi, "Conexao ao MQTT", 4096, NULL, 1, NULL);
 
     // Read the data from BME280 sensor
     xTaskCreate(Publisher_Task, "Publisher_Task", 1024 * 5, NULL, 5, NULL);
