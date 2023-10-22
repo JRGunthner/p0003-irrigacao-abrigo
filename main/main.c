@@ -113,43 +113,28 @@ void aciona_aspersor (uint16_t tempo) {
     motor_definir_velocidade(3470);
 
     for (uint16_t i = 0; i < (tempo * 10); i++) {
-        if (botao_esc())
+        if (botao_esc()) {
+            delay_ms(100);
             break;
+        }
         delay_ms(100);
     }
 
+    delay_ms(100);
     motor_desliga();
     vTaskDelay(6000 / portTICK_PERIOD_MS);
     RELE_SAIDA_INVERSOR_DESL;
+    return;
 }
 
 void ligar_no_horario(uint8_t hh, uint8_t mm, uint8_t ss, uint16_t tempo) {
-    if ((data.tm_hour - 3) == hh)
-        if (data.tm_min == mm)
-            if (data.tm_sec == ss)
-                aciona_aspersor(tempo);
+    if ((data.tm_hour == hh) && (data.tm_min == mm) && (data.tm_sec == ss))
+        aciona_aspersor(tempo);
 }
 
-void app_main(void) {
-    esp_err_t ret = nvs_flash_init();
-    if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
-        ESP_ERROR_CHECK(nvs_flash_erase());
-        ret = nvs_flash_init();
-    }
-    ESP_ERROR_CHECK(ret);
 
-    botao_init();
-
-    // Initialize I2C parameters
-    i2c_master_init();
-
-    // Read the data from BME280 sensor
-    xTaskCreate(Publisher_Task, "Publisher_Task", 1024 * 5, NULL, 5, NULL);
-
-    ESP_ERROR_CHECK(master_init());
-    rele_init();
-
-    printf("Inicialização Tri!\r\n");
+void main_task(void *params) {
+    uint8_t s_ant = 0;
 
     // Inicialização dos relés
     RELE_DESACIONA_DESL;
@@ -161,9 +146,7 @@ void app_main(void) {
     // não permite acionamento pelo inversor
     //RELE_SELECAO_MANUAL;
 
-    uint8_t s_ant = 0;
-
-    while(1) {
+    while (1) {
         if (botao_ent()) {
             // RELE_ACIONA_LIGA;
             // RELE_DESACIONA_DESL;
@@ -196,7 +179,44 @@ void app_main(void) {
             printf("%02d:%02d:%02d\r\n", data.tm_hour, data.tm_min, data.tm_sec);
             s_ant = data.tm_sec;
         }
+
+        uint16_t tempo_irrigacao = 150; // Em segundos
+
+        //ligar_no_horario( 0, 0, 15, tempo_irrigacao);
+        ligar_no_horario( 1, 0, 0, tempo_irrigacao);
+        ligar_no_horario( 2, 0, 0, tempo_irrigacao);
+        ligar_no_horario( 3, 0, 0, tempo_irrigacao);
+        ligar_no_horario( 4, 0, 0, tempo_irrigacao);
+        ligar_no_horario( 5, 0, 0, tempo_irrigacao);
+        ligar_no_horario( 6, 0, 0, tempo_irrigacao);
+        ligar_no_horario( 7, 0, 0, tempo_irrigacao);
+        ligar_no_horario( 8, 0, 0, tempo_irrigacao);
+        ligar_no_horario( 9, 0, 0, tempo_irrigacao);
+        ligar_no_horario( 10, 0, 0, tempo_irrigacao);
+        ligar_no_horario( 11, 0, 0, tempo_irrigacao);
     }
+}
+
+void app_main(void) {
+    esp_err_t ret = nvs_flash_init();
+    if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+        ESP_ERROR_CHECK(nvs_flash_erase());
+        ret = nvs_flash_init();
+    }
+    ESP_ERROR_CHECK(ret);
+
+    botao_init();
+
+    i2c_master_init();
+    ESP_ERROR_CHECK(master_init());
+    rele_init();
+
+    // Read the data from BME280 sensor
+    xTaskCreate(Publisher_Task, "Publisher_Task", 1024 * 5, NULL, 5, NULL);
+
+    printf("Inicialização Tri!\r\n");
+
+    xTaskCreate(&main_task, "Funcao principal", 4096, NULL, 1, NULL);
 }
 
 // Rotina que pega a hora oficial de Brasília ///////////////////////
