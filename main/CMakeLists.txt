@@ -5,6 +5,7 @@ idf_component_register(
         "main.c"
         "motor/modbus_params.c"
         "motor/inversor.c"
+        "mqtt.c"
         "sens_tpu/bme280.c"
         "sens_tpu/sens_tpu.c"
         "teclado/teclado"

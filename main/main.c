@@ -25,10 +25,12 @@
 #include "sens_tpu.h"
 #include "teclado.h"
 #include "wifi.h"
+#include "mqtt.h"
 
 #define TAG_SNTP "SNTP"
 
 xSemaphoreHandle conexao_wifi_semaphore;
+xSemaphoreHandle conexaoMqttSemaphore;
 
 void rele_init(void) {
     gpio_reset_pin(RELE_1);
@@ -135,6 +137,29 @@ void ligar_no_horario(uint8_t hh, uint8_t mm, uint8_t ss, uint16_t tempo) {
         aciona_aspersor(tempo);
 }
 
+void mqtt_liga_motor(void) {
+    RELE_DESACIONA_DESL;
+    RELE_ACIONA_DESL;
+    RELE_SAIDA_INVERSOR_DESL;
+    RELE_SELECAO_INVERSOR;
+
+    vTaskDelay(100 / portTICK_PERIOD_MS);
+
+    aciona_aspersor(150);
+    //vTaskDelay(170 * 1000 / portTICK_PERIOD_MS);
+}
+
+void mqtt_desliga_motor(void) {
+    RELE_DESACIONA_DESL;
+    RELE_ACIONA_DESL;
+    RELE_SAIDA_INVERSOR_DESL;
+    RELE_SELECAO_INVERSOR;
+
+    motor_desliga();
+    vTaskDelay(6000 / portTICK_PERIOD_MS);
+    RELE_SAIDA_INVERSOR_DESL;
+}
+
 void main_task(void *params) {
     uint8_t s_ant = 0;
 
@@ -155,7 +180,8 @@ void main_task(void *params) {
             // vTaskDelay(100 / portTICK_PERIOD_MS);
             // RELE_ACIONA_DESL;
 
-            aciona_aspersor(120);
+            aciona_aspersor(150);
+            vTaskDelay(170 * 1000 / portTICK_PERIOD_MS);
         } else if (botao_esc()) {
             // RELE_DESACIONA_LIGA;
             // RELE_ACIONA_DESL;
@@ -184,7 +210,7 @@ void main_task(void *params) {
 
         uint16_t tempo_irrigacao = 150; // Em segundos
 
-        //ligar_no_horario( 0, 0, 15, tempo_irrigacao);
+        ligar_no_horario( 0, 0, 15, tempo_irrigacao);
         ligar_no_horario( 1, 0, 0, tempo_irrigacao);
         ligar_no_horario( 2, 0, 0, tempo_irrigacao);
         ligar_no_horario( 3, 0, 0, tempo_irrigacao);
@@ -203,9 +229,23 @@ void conectadoWifi(void *params) {
     while (1) {
         if (xSemaphoreTake(conexao_wifi_semaphore, portMAX_DELAY)) {
             printf("Conectado ao WiFi!\r\n");
+            mqtt_start();
         }
     }
     vTaskDelete(NULL);
+}
+
+void trataComunicacaoComServidor(void *params) {
+    char mensagem[50];
+
+    if (xSemaphoreTake(conexaoMqttSemaphore, portMAX_DELAY)) {
+        while (1) {
+            float temperatura = 20.0 + (float)rand()/(float)(RAND_MAX/10.0);
+            sprintf(mensagem, "temperatura: %.2f", temperatura);
+            mqtt_envia_mensagem("sensores/temperatura", mensagem);
+            vTaskDelay(3000 / portTICK_PERIOD_MS);
+        }
+    }
 }
 
 void app_main(void) {
@@ -223,12 +263,14 @@ void app_main(void) {
     rele_init();
 
     conexao_wifi_semaphore = xSemaphoreCreateBinary();
+    conexaoMqttSemaphore = xSemaphoreCreateBinary();
     wifi_start();
 
     xTaskCreate(&conectadoWifi, "Conexao ao MQTT", 4096, NULL, 1, NULL);
+    //xTaskCreate(&trataComunicacaoComServidor, "Comunicacao com o Broker", 4096, NULL, 1, NULL);
 
     // Read the data from BME280 sensor
-    xTaskCreate(Publisher_Task, "Publisher_Task", 1024 * 5, NULL, 5, NULL);
+    //xTaskCreate(Publisher_Task, "Publisher_Task", 1024, NULL, 5, NULL);
 
     printf("Inicialização Tri!\r\n");
 
@@ -237,21 +279,6 @@ void app_main(void) {
 
 // Rotina que pega a hora oficial de Brasília ///////////////////////
 static void obtain_time(void) {
-    ESP_ERROR_CHECK(nvs_flash_init());
-    ESP_ERROR_CHECK(esp_netif_init());
-    ESP_ERROR_CHECK(esp_event_loop_create_default());
-
-    // NTP server address could be aquired via DHCP,
-    // see LWIP_DHCP_GET_NTP_SRV menuconfig option
-#ifdef LWIP_DHCP_GET_NTP_SRV
-    sntp_servermode_dhcp(1);
-#endif
-
-    // This helper function configures Wi-Fi or Ethernet, as selected in menuconfig.
-    // Read "Establishing Wi-Fi or Ethernet Connection" section in
-    // examples/protocols/README.md for more information about this function.
-    ESP_ERROR_CHECK(example_connect());
-
     initialize_sntp();
 
     // wait for time to be set
