@@ -75,6 +75,14 @@ void time_sync_notification_cb(struct timeval *tv) {
     ESP_LOGI(TAG_SNTP, "Notification of a time synchronization event");
 }
 
+void delay_s(uint16_t segundos) {
+    vTaskDelay((segundos * 1000) / portTICK_PERIOD_MS);
+}
+
+void delay_ms(uint16_t milisegundos) {
+    vTaskDelay(milisegundos / portTICK_PERIOD_MS);
+}
+
 struct tm data;
 
 void rotina_sntp(void) {
@@ -98,22 +106,14 @@ void rotina_sntp(void) {
         time_t tt = time(NULL);
         data = *gmtime(&tt);
         printf("%02d:%02d:%02d\r\n", data.tm_hour - 3, data.tm_min, data.tm_sec);
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
+        delay_s(1);
     }
 }
 ////////////////////////////////////////////////////////////
 
-void delay_s(uint16_t segundos) {
-    vTaskDelay((segundos * 1000) / portTICK_PERIOD_MS);
-}
-
-void delay_ms(uint16_t milisegundos) {
-    vTaskDelay(milisegundos / portTICK_PERIOD_MS);
-}
-
 void aciona_aspersor (uint16_t tempo) {
     RELE_SAIDA_INVERSOR_LIGA;
-    vTaskDelay(300 / portTICK_PERIOD_MS);
+    delay_ms(300);
     motor_liga();
     motor_definir_velocidade(3470);
 
@@ -127,7 +127,7 @@ void aciona_aspersor (uint16_t tempo) {
 
     delay_ms(100);
     motor_desliga();
-    vTaskDelay(6000 / portTICK_PERIOD_MS);
+    delay_s(6);
     RELE_SAIDA_INVERSOR_DESL;
     return;
 }
@@ -138,25 +138,14 @@ void ligar_no_horario(uint8_t hh, uint8_t mm, uint8_t ss, uint16_t tempo) {
 }
 
 void mqtt_liga_motor(void) {
-    RELE_DESACIONA_DESL;
-    RELE_ACIONA_DESL;
-    RELE_SAIDA_INVERSOR_DESL;
-    RELE_SELECAO_INVERSOR;
-
-    vTaskDelay(100 / portTICK_PERIOD_MS);
+    delay_ms(100);
 
     aciona_aspersor(150);
-    //vTaskDelay(170 * 1000 / portTICK_PERIOD_MS);
 }
 
 void mqtt_desliga_motor(void) {
-    RELE_DESACIONA_DESL;
-    RELE_ACIONA_DESL;
-    RELE_SAIDA_INVERSOR_DESL;
-    RELE_SELECAO_INVERSOR;
-
     motor_desliga();
-    vTaskDelay(6000 / portTICK_PERIOD_MS);
+    delay_s(6);
     RELE_SAIDA_INVERSOR_DESL;
 }
 
@@ -175,25 +164,26 @@ void main_task(void *params) {
 
     while (1) {
         if (botao_ent()) {
+            delay_ms(100);
             // RELE_ACIONA_LIGA;
             // RELE_DESACIONA_DESL;
-            // vTaskDelay(100 / portTICK_PERIOD_MS);
+            // delay_ms(100);
             // RELE_ACIONA_DESL;
 
             aciona_aspersor(150);
-            vTaskDelay(170 * 1000 / portTICK_PERIOD_MS);
         } else if (botao_esc()) {
+            delay_ms(100);
             // RELE_DESACIONA_LIGA;
             // RELE_ACIONA_DESL;
-            // vTaskDelay(100 / portTICK_PERIOD_MS);
+            // delay_ms(100);
             // RELE_DESACIONA_DESL;
 
             motor_desliga();
-            vTaskDelay(6000 / portTICK_PERIOD_MS);
+            delay_s(6);
             RELE_SAIDA_INVERSOR_DESL;
         }
 
-        vTaskDelay(100 / portTICK_PERIOD_MS);
+        delay_ms(100);
 
         time_t tt = time(NULL);
         data = *gmtime(&tt);
@@ -243,7 +233,7 @@ void trataComunicacaoComServidor(void *params) {
             float temperatura = 20.0 + (float)rand()/(float)(RAND_MAX/10.0);
             sprintf(mensagem, "temperatura: %.2f", temperatura);
             mqtt_envia_mensagem("sensores/temperatura", mensagem);
-            vTaskDelay(3000 / portTICK_PERIOD_MS);
+            delay_s(3);
         }
     }
 }
@@ -288,7 +278,7 @@ static void obtain_time(void) {
     const int retry_count = 20;
     while (sntp_get_sync_status() == SNTP_SYNC_STATUS_RESET && ++retry < retry_count) {
         ESP_LOGI(TAG_SNTP, "Esperando pela hora do servidor... (%d/%d)", retry, retry_count);
-        vTaskDelay(2000 / portTICK_PERIOD_MS);
+        delay_s(2);
     }
     time(&now);
     localtime_r(&now, &timeinfo);
