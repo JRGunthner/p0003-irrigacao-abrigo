@@ -13,8 +13,8 @@
 
 #include "wifi.h"
 
-#define WIFI_SSID "RODRIGO"
-#define WIFI_PASS "23232323"
+#define WIFI_SSID "Visitantes"
+#define WIFI_PASS "12345678"
 #define WIFI_MAXIMUM_RETRY 5
 
 #define WIFI_CONNECTED_BIT  BIT0

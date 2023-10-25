@@ -1,9 +1,17 @@
 #include "inversor.h"
 #include "modbus_params.h"
 #include "mbcontroller.h"
+#include "esp_log.h"
 
 #define MB_PORT_NUM  2
 #define MB_BAUD_RATE 19200
+
+#define MB_RETURN_ON_FALSE(a, err_code, tag, format, ...) do {                              \
+    if (!(a)) {                                                                             \
+        ESP_LOGE(tag, "%s(%d): " format, __FUNCTION__, __LINE__ __VA_OPT__(,) __VA_ARGS__); \
+        return err_code;                                                                    \
+    }                                                                                       \
+} while(0)
 
 // The number of parameters that intended to be used in the particular control process
 #define MASTER_MAX_CIDS num_device_parameters

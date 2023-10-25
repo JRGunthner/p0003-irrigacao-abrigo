@@ -9,10 +9,11 @@ idf_component_register(
         "sens_tpu/bme280.c"
         "sens_tpu/sens_tpu.c"
         "teclado/teclado"
-        "wifi.c"
+        "wifi/wifi.c"
     INCLUDE_DIRS
         "."
         "./motor"
         "./sens_tpu"
         "./teclado"
+        "./wifi"
 )
