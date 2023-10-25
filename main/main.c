@@ -14,7 +14,6 @@
 
 #include "driver/gpio.h"
 #include "nvs_flash.h"
-#include "protocol_examples_common.h"
 #include "bme280.h"
 
 #include "lwip/sockets.h"
@@ -26,8 +25,6 @@
 #include "teclado.h"
 #include "wifi.h"
 #include "mqtt.h"
-
-#define TAG_SNTP "SNTP"
 
 xSemaphoreHandle conexao_wifi_semaphore;
 xSemaphoreHandle conexaoMqttSemaphore;
@@ -67,14 +64,6 @@ void rele_start_stop(uint8_t rele, bool estado) {
 #define RELE_SELECAO_MANUAL   rele_start_stop(RELE_4, 0)
 #define RELE_SELECAO_INVERSOR rele_start_stop(RELE_4, 1)
 
-// Rotina WiFi //////////////////////////////////////////////////
-static void obtain_time(void);
-static void initialize_sntp(void);
-
-void time_sync_notification_cb(struct timeval *tv) {
-    ESP_LOGI(TAG_SNTP, "Notification of a time synchronization event");
-}
-
 void delay_s(uint16_t segundos) {
     vTaskDelay((segundos * 1000) / portTICK_PERIOD_MS);
 }
@@ -82,34 +71,6 @@ void delay_s(uint16_t segundos) {
 void delay_ms(uint16_t milisegundos) {
     vTaskDelay(milisegundos / portTICK_PERIOD_MS);
 }
-
-struct tm data;
-
-void rotina_sntp(void) {
-    time_t now;
-    struct tm timeinfo;
-    time(&now);
-    localtime_r(&now, &timeinfo);
-    if (timeinfo.tm_year < (2023 - 1900)) {
-        printf("Time is not set yet. Connecting to WiFi and getting time over NTP.\r\n");
-        obtain_time();
-        // update 'now' variable with current time
-        time(&now);
-    }
-
-    // Set timezone to Brazil Standard Time
-    setenv("TZ", "BRST+3BRDT+2,M10.3.0,M2.3.0", 1);
-    tzset();
-    localtime_r(&now, &timeinfo);
-
-    while (1) {
-        time_t tt = time(NULL);
-        data = *gmtime(&tt);
-        printf("%02d:%02d:%02d\r\n", data.tm_hour - 3, data.tm_min, data.tm_sec);
-        delay_s(1);
-    }
-}
-////////////////////////////////////////////////////////////
 
 void aciona_aspersor (uint16_t tempo) {
     RELE_SAIDA_INVERSOR_LIGA;
@@ -132,6 +93,8 @@ void aciona_aspersor (uint16_t tempo) {
     return;
 }
 
+struct tm data;
+
 void ligar_no_horario(uint8_t hh, uint8_t mm, uint8_t ss, uint16_t tempo) {
     if ((data.tm_hour == hh) && (data.tm_min == mm) && (data.tm_sec == ss))
         aciona_aspersor(tempo);
@@ -139,7 +102,6 @@ void ligar_no_horario(uint8_t hh, uint8_t mm, uint8_t ss, uint16_t tempo) {
 
 void mqtt_liga_motor(void) {
     delay_ms(100);
-
     aciona_aspersor(150);
 }
 
@@ -200,7 +162,7 @@ void main_task(void *params) {
 
         uint16_t tempo_irrigacao = 150; // Em segundos
 
-        ligar_no_horario( 0, 0, 15, tempo_irrigacao);
+        //ligar_no_horario( 0, 0, 15, tempo_irrigacao);
         ligar_no_horario( 1, 0, 0, tempo_irrigacao);
         ligar_no_horario( 2, 0, 0, tempo_irrigacao);
         ligar_no_horario( 3, 0, 0, tempo_irrigacao);
@@ -262,33 +224,5 @@ void app_main(void) {
     // Read the data from BME280 sensor
     //xTaskCreate(Publisher_Task, "Publisher_Task", 1024, NULL, 5, NULL);
 
-    printf("Inicialização Tri!\r\n");
-
     xTaskCreate(&main_task, "Funcao principal", 4096, NULL, 1, NULL);
-}
-
-// Rotina que pega a hora oficial de Brasília ///////////////////////
-static void obtain_time(void) {
-    initialize_sntp();
-
-    // wait for time to be set
-    time_t now = 0;
-    struct tm timeinfo = { 0 };
-    int retry = 0;
-    const int retry_count = 20;
-    while (sntp_get_sync_status() == SNTP_SYNC_STATUS_RESET && ++retry < retry_count) {
-        ESP_LOGI(TAG_SNTP, "Esperando pela hora do servidor... (%d/%d)", retry, retry_count);
-        delay_s(2);
-    }
-    time(&now);
-    localtime_r(&now, &timeinfo);
-
-    ESP_ERROR_CHECK(example_disconnect());
-}
-
-static void initialize_sntp(void) {
-    sntp_setoperatingmode(SNTP_OPMODE_POLL);
-    sntp_setservername(0, "a.st1.ntp.br");
-    sntp_set_time_sync_notification_cb(time_sync_notification_cb);
-    sntp_init();
 }
