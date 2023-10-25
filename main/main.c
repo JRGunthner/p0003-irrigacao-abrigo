@@ -225,4 +225,20 @@ void app_main(void) {
     //xTaskCreate(Publisher_Task, "Publisher_Task", 1024, NULL, 5, NULL);
 
     xTaskCreate(&main_task, "Funcao principal", 4096, NULL, 1, NULL);
+
+    /* TODO: fazer nova task do sntp
+    
+    sntp_start();
+
+    while (1) {
+        struct tm tempo = pegar_data_hora();
+        char strftime_buf[64];
+
+        strftime(strftime_buf, sizeof(strftime_buf), "%c", &tempo);
+        printf("Data/hora atual: %s\r\n", strftime_buf);
+
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
+    }
+    
+    */
 }

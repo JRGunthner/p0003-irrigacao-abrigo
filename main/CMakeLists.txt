@@ -8,6 +8,7 @@ idf_component_register(
         "mqtt/mqtt.c"
         "sens_tpu/bme280.c"
         "sens_tpu/sens_tpu.c"
+        "sntp/sntp.c"
         "teclado/teclado"
         "wifi/wifi.c"
     INCLUDE_DIRS
@@ -15,6 +16,7 @@ idf_component_register(
         "./motor"
         "./mqtt"
         "./sens_tpu"
+        "./sntp"
         "./teclado"
         "./wifi"
 )
