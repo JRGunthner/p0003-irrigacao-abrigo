@@ -113,8 +113,6 @@ void mqtt_desliga_motor(void) {
 }
 
 static void vMainTask(void *pvParameters) {
-    uint8_t s_ant = 0;
-
     // Inicialização dos relés
     RELE_DESACIONA_DESL;
     RELE_ACIONA_DESL;
@@ -126,6 +124,8 @@ static void vMainTask(void *pvParameters) {
     //RELE_SELECAO_MANUAL;
 
     while (1) {
+        uint16_t tempo_irrigacao = 150; // Em segundos
+
         if (botao_ent()) {
             delay_ms(100);
             // RELE_ACIONA_LIGA;
@@ -133,7 +133,7 @@ static void vMainTask(void *pvParameters) {
             // delay_ms(100);
             // RELE_ACIONA_DESL;
 
-            aciona_aspersor(150);
+            aciona_aspersor(tempo_irrigacao);
         } else if (botao_esc()) {
             delay_ms(100);
             // RELE_DESACIONA_LIGA;
@@ -146,10 +146,6 @@ static void vMainTask(void *pvParameters) {
             RELE_SAIDA_INVERSOR_DESL;
         }
 
-        delay_ms(100);
-
-        uint16_t tempo_irrigacao = 150; // Em segundos
-
         //ligar_no_horario( 0, 0, 15, tempo_irrigacao);
         ligar_no_horario( 7, 0, 0, tempo_irrigacao);
         ligar_no_horario( 8, 0, 0, tempo_irrigacao);
@@ -160,8 +156,10 @@ static void vMainTask(void *pvParameters) {
         ligar_no_horario(13, 0, 0, tempo_irrigacao);
         ligar_no_horario(14, 0, 0, tempo_irrigacao);
         ligar_no_horario(15, 0, 0, tempo_irrigacao);
+        ligar_no_horario(16, 0, 0, tempo_irrigacao);
         ligar_no_horario(17, 0, 0, tempo_irrigacao);
     }
+    vTaskDelete(NULL);
 }
 
 static void vMqttInitTask(void *pvParameters) {
@@ -184,6 +182,7 @@ static void vMqttTxTask(void *pvParameters) {
             mqtt_enviar_mensagem("sensores/temperatura", mensagem);
             delay_s(3);
         }
+        vTaskDelete(NULL);
     }
 }
 
@@ -200,6 +199,7 @@ static void vSntpTask(void *pvParameters) {
 
                 vTaskDelay(1000 / portTICK_PERIOD_MS);
             }
+            vTaskDelete(NULL);
         }
     }
 }

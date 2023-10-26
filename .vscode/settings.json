@@ -1,12 +1,13 @@
 {
     "C_Cpp.intelliSenseEngine": "Tag Parser",
     "idf.flashType": "UART",
-    "idf.portWin": "COM4",
+    "idf.portWin": "COM13",
     "idf.adapterTargetName": "esp32s3",
     "idf.openOcdConfigs": [
         "interface/ftdi/esp32_devkitj_v1.cfg",
         "target/esp32s3.cfg"
     ],
+    "editor.formatOnSave": true,
     "files.associations": {
         "string.h": "c",
         "mbcontroller.h": "c",

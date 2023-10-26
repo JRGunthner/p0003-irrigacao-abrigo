@@ -1,0 +1,22 @@
+---
+# instalação
+# 1) instalar node.js
+# 2) instalar clang-format via npm usando o comando: npm install -g clang-format
+# 3) instalar extensao no vscode "clang-format"
+# 4) adicionar a seguinte linha no arquivo ./vscode/settings.json
+#       "editor.formatOnSave": true
+# 5) reiniciar vscode
+
+# format style options
+# https://releases.llvm.org/5.0.0/tools/clang/docs/ClangFormatStyleOptions.html
+# se desejar um arquivo com todas as opcoes, executar o comando abaixo
+# clang-format --style=Google --dump-config > options.yaml
+BasedOnStyle: Google
+IndentWidth: 4
+SortIncludes: false
+AllowShortLoopsOnASingleLine: false
+AllowShortCaseLabelsOnASingleLine: true
+AllowShortIfStatementsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: None
+AlignConsecutiveMacros: AcrossEmptyLines
+ColumnLimit: 100
