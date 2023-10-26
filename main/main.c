@@ -219,7 +219,7 @@ void app_main(void) {
     i2c_master_init();
     inversor_init();
     rele_init();
-    wifi_init();
+    wifi_init("Visitantes", "12345678");
 
     xTaskCreate(vMqttInitTask,
                 "vMqttInitTask",

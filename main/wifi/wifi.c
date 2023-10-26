@@ -13,9 +13,7 @@
 
 #include "wifi.h"
 
-#define WIFI_SSID "Visitantes"
-#define WIFI_PASS "12345678"
-#define WIFI_MAXIMUM_RETRY 5
+#define WIFI_TENTATIVAS_RECONEXAO 5
 
 #define WIFI_CONNECTED_BIT  BIT0
 #define WIFI_FAIL_BIT       BIT1
@@ -29,7 +27,7 @@ static void event_handler(void *arg, esp_event_base_t event_base, int32_t event_
     if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START) {
         esp_wifi_connect();
     } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED) {
-        if (s_retry_num < WIFI_MAXIMUM_RETRY) {
+        if (s_retry_num < WIFI_TENTATIVAS_RECONEXAO) {
             esp_wifi_connect();
             s_retry_num++;
             ESP_LOGI(TAG, "Tentando reconectar a rede WiFi...");
@@ -47,7 +45,7 @@ static void event_handler(void *arg, esp_event_base_t event_base, int32_t event_
     }
 }
 
-void wifi_init(void) {
+void wifi_init(const char *wifi_ssid, const char *wifi_pass) {
     semaph_con_wifi = xSemaphoreCreateBinary();
     semaph_con_sntp = xSemaphoreCreateBinary();
     s_wifi_event_group = xEventGroupCreate();
@@ -63,12 +61,17 @@ void wifi_init(void) {
     ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &event_handler, NULL));
     ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &event_handler, NULL));
 
+    
+
     wifi_config_t config = {
         .sta = {
-            .ssid = WIFI_SSID,
-            .password = WIFI_PASS
+            .ssid = "",
+            .password = ""
         }
     };
+
+    memcpy(config.sta.ssid, wifi_ssid, strlen(wifi_ssid));
+    memcpy(config.sta.password, wifi_pass, strlen(wifi_pass));
 
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
     ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &config));
