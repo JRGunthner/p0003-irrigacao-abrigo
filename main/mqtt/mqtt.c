@@ -1,7 +1,3 @@
-#include <stdio.h>
-#include <stdint.h>
-#include <stddef.h>
-#include <string.h>
 #include "esp_system.h"
 #include "esp_event.h"
 #include "esp_netif.h"
@@ -23,7 +19,6 @@
 #define TAG "MQTT"
 
 esp_mqtt_client_handle_t client;
-extern xSemaphoreHandle conexaoMqttSemaphore;
 
 static void log_error_if_nonzero(const char *message, int error_code) {
     if (error_code != 0)
@@ -36,7 +31,7 @@ static esp_err_t mqtt_event_handler_cb(esp_mqtt_event_handle_t event) {
     switch (event->event_id) {
         case MQTT_EVENT_CONNECTED:
             ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED");
-            xSemaphoreGive(conexaoMqttSemaphore);
+            xSemaphoreGive(semaph_con_mqtt);
             msg_id = esp_mqtt_client_subscribe(client, "servidor/resposta", 0);
             printf("Mensagem recebida, ID: %d\r\n", msg_id);
             break;
@@ -88,11 +83,9 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
 }
 
 void mqtt_start(void) {
+    semaph_con_mqtt = xSemaphoreCreateBinary();
+
     esp_mqtt_client_config_t mqtt_cfg = {
-        // .uri = "mqtt://mqtt.eclipseprojects.io",
-        // .skip_cert_common_name_check = false,
-        // .use_secure_element = false,
-        //.host = "10.0.0.4",
         .host = "irrigacao.jgtche.com.br",
         .port = 1883,
         .username = "mastche",
@@ -104,7 +97,7 @@ void mqtt_start(void) {
     esp_mqtt_client_start(client);
 }
 
-void mqtt_envia_mensagem(char *topico, char *mensagem) {
+void mqtt_enviar_mensagem(char *topico, char *mensagem) {
     int msg_id = esp_mqtt_client_publish(client, topico, mensagem, 0, 1, 0);
     printf("Mensagem enviada, ID: %d\r\n", msg_id);
 }

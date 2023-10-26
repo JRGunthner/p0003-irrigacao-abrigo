@@ -9,7 +9,7 @@ extern "C" {
 #include <stdint.h>
 #include "main.h"
 
-esp_err_t master_init(void);
+esp_err_t inversor_init(void);
 void motor_definir_velocidade(uint16_t rpm);
 void motor_desliga(void);
 void motor_liga(void);

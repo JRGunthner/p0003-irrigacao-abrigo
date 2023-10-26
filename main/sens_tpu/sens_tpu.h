@@ -11,7 +11,7 @@ extern "C" {
 #include "main.h"
 
 void i2c_master_init(void);
-void Publisher_Task(void *params);
+void vBme280Task(void *params);
 
 #ifdef __cplusplus
 }

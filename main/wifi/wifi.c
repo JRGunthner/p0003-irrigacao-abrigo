@@ -13,8 +13,8 @@
 
 #include "wifi.h"
 
-#define WIFI_SSID "Visitantes"
-#define WIFI_PASS "12345678"
+#define WIFI_SSID "RODRIGO"
+#define WIFI_PASS "23232323"
 #define WIFI_MAXIMUM_RETRY 5
 
 #define WIFI_CONNECTED_BIT  BIT0
@@ -22,10 +22,7 @@
 
 #define TAG "WIFI"
 
-extern xSemaphoreHandle conexao_wifi_semaphore;
-
 static EventGroupHandle_t s_wifi_event_group;
-
 static uint16_t s_retry_num = 0;
 
 static void event_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data) {
@@ -45,12 +42,12 @@ static void event_handler(void *arg, esp_event_base_t event_base, int32_t event_
         ESP_LOGI(TAG, "Endereco IP recebido:" IPSTR, IP2STR(&event->ip_info.ip));
         s_retry_num = 0;
         xEventGroupSetBits(s_wifi_event_group, WIFI_CONNECTED_BIT);
-        xSemaphoreGive(conexao_wifi_semaphore);
+        xSemaphoreGive(semaph_con_wifi);
     }
-
 }
 
-void wifi_start(void) {
+void wifi_init(void) {
+    semaph_con_wifi = xSemaphoreCreateBinary();
     s_wifi_event_group = xEventGroupCreate();
 
     ESP_ERROR_CHECK(esp_netif_init());

@@ -128,7 +128,7 @@ static void* master_get_param_data(const mb_parameter_descriptor_t* param_descri
 }
 
 // Modbus master initialization
-esp_err_t master_init(void) {
+esp_err_t inversor_init(void) {
     esp_err_t err;
     mb_communication_info_t comm = {
         .port = MB_PORT_NUM,

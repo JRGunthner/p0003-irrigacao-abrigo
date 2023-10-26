@@ -91,7 +91,7 @@ char humidity[10];
 char pressure[10];
 
 // BME280 I2C task
-void Publisher_Task(void *params) {
+void vBme280Task(void *params) {
     // BME280 I2C communication structure
     struct bme280_t bme280 = {
         .bus_write = BME280_I2C_bus_write,

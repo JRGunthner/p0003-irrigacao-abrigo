@@ -26,8 +26,8 @@
 #include "wifi.h"
 #include "mqtt.h"
 
-xSemaphoreHandle conexao_wifi_semaphore;
-xSemaphoreHandle conexaoMqttSemaphore;
+xTaskHandle xHandle_mqttInitTask = NULL;
+xTaskHandle xHandle_mainTask = NULL;
 
 void rele_init(void) {
     gpio_reset_pin(RELE_1);
@@ -111,7 +111,7 @@ void mqtt_desliga_motor(void) {
     RELE_SAIDA_INVERSOR_DESL;
 }
 
-void main_task(void *params) {
+void vMainTask(void *params) {
     uint8_t s_ant = 0;
 
     // Inicialização dos relés
@@ -177,9 +177,9 @@ void main_task(void *params) {
     }
 }
 
-void conectadoWifi(void *params) {
+void vMqttInitTask(void *params) {
     while (1) {
-        if (xSemaphoreTake(conexao_wifi_semaphore, portMAX_DELAY)) {
+        if (xSemaphoreTake(semaph_con_wifi, portMAX_DELAY)) {
             printf("Conectado ao WiFi!\r\n");
             mqtt_start();
         }
@@ -187,44 +187,70 @@ void conectadoWifi(void *params) {
     vTaskDelete(NULL);
 }
 
-void trataComunicacaoComServidor(void *params) {
+void vMqttTxTask(void *params) {
     char mensagem[50];
 
-    if (xSemaphoreTake(conexaoMqttSemaphore, portMAX_DELAY)) {
+    if (xSemaphoreTake(semaph_con_mqtt, portMAX_DELAY)) {
         while (1) {
             float temperatura = 20.0 + (float)rand()/(float)(RAND_MAX/10.0);
             sprintf(mensagem, "temperatura: %.2f", temperatura);
-            mqtt_envia_mensagem("sensores/temperatura", mensagem);
+            mqtt_enviar_mensagem("sensores/temperatura", mensagem);
             delay_s(3);
         }
     }
 }
 
-void app_main(void) {
+void flash_init(void) {
     esp_err_t ret = nvs_flash_init();
     if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
         ESP_ERROR_CHECK(nvs_flash_erase());
         ret = nvs_flash_init();
     }
     ESP_ERROR_CHECK(ret);
+}
 
+void app_main(void) {
+    flash_init();
     botao_init();
-
     i2c_master_init();
-    ESP_ERROR_CHECK(master_init());
+    inversor_init();
     rele_init();
+    wifi_init();
 
-    conexao_wifi_semaphore = xSemaphoreCreateBinary();
-    conexaoMqttSemaphore = xSemaphoreCreateBinary();
-    wifi_start();
+    xTaskCreate(vMqttInitTask,
+                "vMqttInitTask",
+                4096,
+                NULL,
+                tskIDLE_PRIORITY,
+                xHandle_mqttInitTask);
 
-    xTaskCreate(&conectadoWifi, "Conexao ao MQTT", 4096, NULL, 1, NULL);
-    //xTaskCreate(&trataComunicacaoComServidor, "Comunicacao com o Broker", 4096, NULL, 1, NULL);
+    xTaskCreate(vMainTask,
+                "vMainTask",
+                4096,
+                NULL,
+                tskIDLE_PRIORITY + 2,
+                xHandle_mainTask);
 
-    // Read the data from BME280 sensor
-    //xTaskCreate(Publisher_Task, "Publisher_Task", 1024, NULL, 5, NULL);
+    // xTaskCreate(vMqttTxTask,
+    //             "vMqttTxTask",
+    //             4096,
+    //             NULL,
+    //             tskIDLE_PRIORITY,
+    //             NULL);
 
-    xTaskCreate(&main_task, "Funcao principal", 4096, NULL, 1, NULL);
+    // xTaskCreate(vBme280Task,
+    //             "vBme280Task",
+    //             1024,
+    //             NULL,
+    //             tskIDLE_PRIORITY + 5,
+    //             NULL);
+
+    // xTaskCreate(vSntpTask,
+    //             "vSntpTask",
+    //             4096,
+    //             NULL,
+    //             tskIDLE_PRIORITY,
+    //             NULL);
 
     /* TODO: fazer nova task do sntp
     
@@ -239,6 +265,5 @@ void app_main(void) {
 
         vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
-    
     */
 }

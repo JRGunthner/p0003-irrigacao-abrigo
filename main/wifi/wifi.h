@@ -9,7 +9,9 @@ extern "C" {
 #include <stdint.h>
 #include <string.h>
 
-void wifi_start(void);
+xSemaphoreHandle semaph_con_wifi;
+
+void wifi_init(void);
 
 #ifdef __cplusplus
 }
