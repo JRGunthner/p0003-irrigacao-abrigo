@@ -43,11 +43,13 @@ static void event_handler(void *arg, esp_event_base_t event_base, int32_t event_
         s_retry_num = 0;
         xEventGroupSetBits(s_wifi_event_group, WIFI_CONNECTED_BIT);
         xSemaphoreGive(semaph_con_wifi);
+        xSemaphoreGive(semaph_con_sntp);
     }
 }
 
 void wifi_init(void) {
     semaph_con_wifi = xSemaphoreCreateBinary();
+    semaph_con_sntp = xSemaphoreCreateBinary();
     s_wifi_event_group = xEventGroupCreate();
 
     ESP_ERROR_CHECK(esp_netif_init());

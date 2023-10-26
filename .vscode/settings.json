@@ -22,6 +22,8 @@
         "esp_log.h": "c",
         "esp_event.h": "c",
         "queue.h": "c",
-        "wifi.h": "c"
+        "wifi.h": "c",
+        "chrono": "c",
+        "xutility": "c"
     }
 }

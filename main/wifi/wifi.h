@@ -10,6 +10,7 @@ extern "C" {
 #include <string.h>
 
 xSemaphoreHandle semaph_con_wifi;
+xSemaphoreHandle semaph_con_sntp;
 
 void wifi_init(void);
 

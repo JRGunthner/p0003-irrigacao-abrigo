@@ -25,9 +25,11 @@
 #include "teclado.h"
 #include "wifi.h"
 #include "mqtt.h"
+#include "sntp.h"
 
 xTaskHandle xHandle_mqttInitTask = NULL;
 xTaskHandle xHandle_mainTask = NULL;
+xTaskHandle xHandle_sntpTask = NULL;
 
 void rele_init(void) {
     gpio_reset_pin(RELE_1);
@@ -93,10 +95,9 @@ void aciona_aspersor (uint16_t tempo) {
     return;
 }
 
-struct tm data;
-
 void ligar_no_horario(uint8_t hh, uint8_t mm, uint8_t ss, uint16_t tempo) {
-    if ((data.tm_hour == hh) && (data.tm_min == mm) && (data.tm_sec == ss))
+    struct tm data_hora = sntp_pegar_data_hora();
+    if ((data_hora.tm_hour == hh) && (data_hora.tm_min == mm) && (data_hora.tm_sec == ss))
         aciona_aspersor(tempo);
 }
 
@@ -111,7 +112,7 @@ void mqtt_desliga_motor(void) {
     RELE_SAIDA_INVERSOR_DESL;
 }
 
-void vMainTask(void *params) {
+static void vMainTask(void *pvParameters) {
     uint8_t s_ant = 0;
 
     // Inicialização dos relés
@@ -147,37 +148,23 @@ void vMainTask(void *params) {
 
         delay_ms(100);
 
-        time_t tt = time(NULL);
-        data = *gmtime(&tt);
-
-        if (data.tm_sec != s_ant) {
-            if ((data.tm_hour) >= 0)
-                gpio_set_level(LED_BR, 1);
-            else
-                gpio_set_level(LED_BR, 0);
-            //printf("%02d:%02d:%02d, Temperatura: %s, Pressão: %s, Umidade: %s\r\n", data.tm_hour, data.tm_min, data.tm_sec, temperature, pressure, humidity);
-            printf("%02d:%02d:%02d\r\n", data.tm_hour, data.tm_min, data.tm_sec);
-            s_ant = data.tm_sec;
-        }
-
         uint16_t tempo_irrigacao = 150; // Em segundos
 
         //ligar_no_horario( 0, 0, 15, tempo_irrigacao);
-        ligar_no_horario( 1, 0, 0, tempo_irrigacao);
-        ligar_no_horario( 2, 0, 0, tempo_irrigacao);
-        ligar_no_horario( 3, 0, 0, tempo_irrigacao);
-        ligar_no_horario( 4, 0, 0, tempo_irrigacao);
-        ligar_no_horario( 5, 0, 0, tempo_irrigacao);
-        ligar_no_horario( 6, 0, 0, tempo_irrigacao);
         ligar_no_horario( 7, 0, 0, tempo_irrigacao);
         ligar_no_horario( 8, 0, 0, tempo_irrigacao);
         ligar_no_horario( 9, 0, 0, tempo_irrigacao);
-        ligar_no_horario( 10, 0, 0, tempo_irrigacao);
-        ligar_no_horario( 11, 0, 0, tempo_irrigacao);
+        ligar_no_horario(10, 0, 0, tempo_irrigacao);
+        ligar_no_horario(11, 0, 0, tempo_irrigacao);
+        ligar_no_horario(12, 0, 0, tempo_irrigacao);
+        ligar_no_horario(13, 0, 0, tempo_irrigacao);
+        ligar_no_horario(14, 0, 0, tempo_irrigacao);
+        ligar_no_horario(15, 0, 0, tempo_irrigacao);
+        ligar_no_horario(17, 0, 0, tempo_irrigacao);
     }
 }
 
-void vMqttInitTask(void *params) {
+static void vMqttInitTask(void *pvParameters) {
     while (1) {
         if (xSemaphoreTake(semaph_con_wifi, portMAX_DELAY)) {
             printf("Conectado ao WiFi!\r\n");
@@ -187,7 +174,7 @@ void vMqttInitTask(void *params) {
     vTaskDelete(NULL);
 }
 
-void vMqttTxTask(void *params) {
+static void vMqttTxTask(void *pvParameters) {
     char mensagem[50];
 
     if (xSemaphoreTake(semaph_con_mqtt, portMAX_DELAY)) {
@@ -196,6 +183,23 @@ void vMqttTxTask(void *params) {
             sprintf(mensagem, "temperatura: %.2f", temperatura);
             mqtt_enviar_mensagem("sensores/temperatura", mensagem);
             delay_s(3);
+        }
+    }
+}
+
+static void vSntpTask(void *pvParameters) {
+    while (1) {
+        if (xSemaphoreTake(semaph_con_sntp, portMAX_DELAY)) {
+            sntp_start();
+            while (1) {
+                struct tm tempo = sntp_pegar_data_hora();
+                char strftime_buf[64];
+
+                strftime(strftime_buf, sizeof(strftime_buf), "%c", &tempo);
+                printf("Data/hora atual: %s\r\n", strftime_buf);
+
+                vTaskDelay(1000 / portTICK_PERIOD_MS);
+            }
         }
     }
 }
@@ -231,6 +235,13 @@ void app_main(void) {
                 tskIDLE_PRIORITY + 2,
                 xHandle_mainTask);
 
+    xTaskCreate(vSntpTask,
+                "vSntpTask",
+                4096,
+                NULL,
+                tskIDLE_PRIORITY,
+                xHandle_sntpTask);
+
     // xTaskCreate(vMqttTxTask,
     //             "vMqttTxTask",
     //             4096,
@@ -244,26 +255,4 @@ void app_main(void) {
     //             NULL,
     //             tskIDLE_PRIORITY + 5,
     //             NULL);
-
-    // xTaskCreate(vSntpTask,
-    //             "vSntpTask",
-    //             4096,
-    //             NULL,
-    //             tskIDLE_PRIORITY,
-    //             NULL);
-
-    /* TODO: fazer nova task do sntp
-    
-    sntp_start();
-
-    while (1) {
-        struct tm tempo = pegar_data_hora();
-        char strftime_buf[64];
-
-        strftime(strftime_buf, sizeof(strftime_buf), "%c", &tempo);
-        printf("Data/hora atual: %s\r\n", strftime_buf);
-
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
-    }
-    */
 }
