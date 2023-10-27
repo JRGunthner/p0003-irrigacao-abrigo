@@ -10,9 +10,9 @@ extern "C" {
 #include "main.h"
 
 esp_err_t inversor_init(void);
-void motor_definir_velocidade(uint16_t rpm);
-void motor_desliga(void);
-void motor_liga(void);
+void inversor_velocidade_motor(uint16_t rpm);
+void inversor_desligar_motor(void);
+void inversor_ligar_motor(void);
 
 #ifdef __cplusplus
 }

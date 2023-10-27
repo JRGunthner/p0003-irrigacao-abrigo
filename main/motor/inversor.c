@@ -164,7 +164,7 @@ esp_err_t inversor_init(void) {
     return err;
 }
 
-void motor_definir_velocidade(uint16_t rpm) {
+void inversor_velocidade_motor(uint16_t rpm) {
     esp_err_t err = ESP_OK;
     const mb_parameter_descriptor_t* param_descriptor = NULL;
     uint16_t velocidade = (0x2000 * rpm) / 3470;
@@ -201,7 +201,7 @@ void motor_definir_velocidade(uint16_t rpm) {
     vTaskDelay(UPDATE_CIDS_TIMEOUT_TICS);
 }
 
-void motor_desliga(void) {
+void inversor_desligar_motor(void) {
     esp_err_t err = ESP_OK;
     const mb_parameter_descriptor_t* param_descriptor = NULL;
 
@@ -236,7 +236,7 @@ void motor_desliga(void) {
     vTaskDelay(UPDATE_CIDS_TIMEOUT_TICS);
 }
 
-void motor_liga(void) {
+void inversor_ligar_motor(void) {
     esp_err_t err = ESP_OK;
     const mb_parameter_descriptor_t* param_descriptor = NULL;
 

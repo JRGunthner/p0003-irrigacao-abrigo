@@ -4,6 +4,7 @@
 #include "freertos/semphr.h"
 #include "freertos/queue.h"
 
+#include "esp_log.h"
 #include "driver/gpio.h"
 #include "nvs_flash.h"
 #include "bme280.h"
@@ -14,6 +15,12 @@
 #include "wifi.h"
 #include "mqtt.h"
 #include "sntp.h"
+#include "types.h"
+
+#define TAG "MAIN"
+#define DISPOSITIVO_ID 1
+
+tipo_acionamento_t tipo_acionamento = INVERSOR;
 
 xTaskHandle xHandle_mqttInitTask = NULL;
 xTaskHandle xHandle_mqttRxTask = NULL;
@@ -64,11 +71,11 @@ void delay_ms(uint16_t milisegundos) {
     vTaskDelay(milisegundos / portTICK_PERIOD_MS);
 }
 
-void aciona_aspersor(uint16_t tempo) {
+static error_t motor_ligar_inversor(uint16_t tempo) {
     RELE_SAIDA_INVERSOR_LIGA;
     delay_ms(300);
-    motor_liga();
-    motor_definir_velocidade(3470);
+    inversor_ligar_motor();
+    inversor_velocidade_motor(3470);
 
     for (uint16_t i = 0; i < (tempo * 10); i++) {
         if (botao_esc()) {
@@ -79,16 +86,60 @@ void aciona_aspersor(uint16_t tempo) {
     }
 
     delay_ms(100);
-    motor_desliga();
+    inversor_desligar_motor();
     delay_s(6);
     RELE_SAIDA_INVERSOR_DESL;
-    return;
+
+    return pdOK;
+}
+
+static error_t motor_desligar_inversor(void) {
+    inversor_desligar_motor();
+    delay_s(6);
+    RELE_SAIDA_INVERSOR_DESL;
+    return pdOK;
+}
+
+static error_t motor_ligar_manual(uint16_t tempo) {
+    RELE_ACIONA_LIGA;
+    RELE_DESACIONA_DESL;
+    delay_ms(100);
+    RELE_ACIONA_DESL;
+    return pdOK;
+}
+
+static error_t motor_desligar_manual(void) {
+    RELE_DESACIONA_LIGA;
+    RELE_ACIONA_DESL;
+    delay_ms(100);
+    RELE_DESACIONA_DESL;
+    return pdOK;
+}
+
+static error_t aspersor_ligar(uint16_t tempo) {
+    printf("Ligando aspersor\r\n");
+    if (tipo_acionamento == INVERSOR) {
+        motor_ligar_inversor(tempo);
+    } else {
+        motor_ligar_manual(tempo);
+    }
+    return pdOK;
+}
+
+static error_t aspersor_desligar(void) {
+    printf("Desligando aspersor\r\n");
+    if (tipo_acionamento == INVERSOR) {
+        motor_desligar_inversor();
+    } else {
+        motor_desligar_manual();
+    }
+    return pdOK;
 }
 
 void ligar_no_horario(uint8_t hh, uint8_t mm, uint8_t ss, uint16_t tempo) {
     struct tm data_hora = sntp_pegar_data_hora();
     if ((data_hora.tm_hour == hh) && (data_hora.tm_min == mm) && (data_hora.tm_sec == ss))
-        aciona_aspersor(tempo);
+        aspersor_ligar(tempo);
 }
 
 static void vMainTask(void *pvParameters) {
@@ -100,29 +151,18 @@ static void vMainTask(void *pvParameters) {
 
     // Seleciona comando manual. Ativa as botoeiras e
     // não permite acionamento pelo inversor
-    // RELE_SELECAO_MANUAL;
+    if (tipo_acionamento == MANUAL)
+        RELE_SELECAO_MANUAL;
 
     while (1) {
         uint16_t tempo_irrigacao = 150;  // Em segundos
 
         if (botao_ent()) {
             delay_ms(100);
-            // RELE_ACIONA_LIGA;
-            // RELE_DESACIONA_DESL;
-            // delay_ms(100);
-            // RELE_ACIONA_DESL;
-
-            aciona_aspersor(tempo_irrigacao);
+            aspersor_ligar(tempo_irrigacao);
         } else if (botao_esc()) {
             delay_ms(100);
-            // RELE_DESACIONA_LIGA;
-            // RELE_ACIONA_DESL;
-            // delay_ms(100);
-            // RELE_DESACIONA_DESL;
-
-            motor_desliga();
-            delay_s(6);
-            RELE_SAIDA_INVERSOR_DESL;
+            aspersor_desligar();
         }
 
         ligar_no_horario(7, 0, 0, tempo_irrigacao);
@@ -164,13 +204,24 @@ static void vMqttTxTask(void *pvParameters) {
     }
 }
 
+error_t verifica_msg_mqtt_rx(mqtt_t mqtt_rx) {
+    if (mqtt_rx.id != DISPOSITIVO_ID) {
+        ESP_LOGE(TAG, "ID invalido!\r\n");
+        return pdERROR;
+    }
+
+    if (strcmp(mqtt_rx.msg, "tche") == 0) {
+        printf("mas tche, ai que eu me refiro\r\n");
+        return pdOK;
+    }
+
+    return pdOK;
+}
+
 static void vMqttRxTask(void *pvParameters) {
     while (1) {
-        if (xSemaphoreTake(semaph_mqtt_rx, portMAX_DELAY)) {
-            mqtt_t mqtt_rx = mqtt_receber();
-            printf("ID: %d\r\n", mqtt_rx.id);
-            printf("Msg: %s\r\n", mqtt_rx.msg);
-        }
+        if (xSemaphoreTake(semaph_mqtt_rx, portMAX_DELAY))
+            verifica_msg_mqtt_rx(mqtt_receber());
     }
     vTaskDelete(NULL);
 }
@@ -210,14 +261,12 @@ void app_main(void) {
     rele_init();
     wifi_init("Visitantes", "12345678");
 
-    xTaskCreate(vMqttInitTask, "vMqttInitTask", 4096, NULL, tskIDLE_PRIORITY, xHandle_mqttInitTask);
-
-    xTaskCreate(vMainTask,
-                "vMainTask",
+    xTaskCreate(vMqttInitTask,
+                "vMqttInitTask",
                 4096,
                 NULL,
-                tskIDLE_PRIORITY + 2,
-                xHandle_mainTask);
+                tskIDLE_PRIORITY,
+                xHandle_mqttInitTask);
 
     xTaskCreate(vSntpTask,
                 "vSntpTask",
@@ -239,6 +288,13 @@ void app_main(void) {
                 NULL,
                 tskIDLE_PRIORITY,
                 xHandle_mqttTxTask);
+
+    xTaskCreate(vMainTask,
+                "vMainTask",
+                4096,
+                NULL,
+                tskIDLE_PRIORITY + 2,
+                xHandle_mainTask);
 
     // xTaskCreate(vBme280Task,
     //             "vBme280Task",

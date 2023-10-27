@@ -32,6 +32,7 @@
         "span": "c",
         "vector": "c",
         "xstring": "c",
-        "sockets.h": "c"
+        "sockets.h": "c",
+        "semphr.h": "c"
     }
 }
