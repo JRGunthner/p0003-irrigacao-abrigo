@@ -12,12 +12,11 @@ typedef struct {
     char msg[256];
 } mqtt_t;
 
-xSemaphoreHandle semaph_con_mqtt;
+xSemaphoreHandle semaph_mqtt_con;
+xSemaphoreHandle semaph_mqtt_rx;
 
 void mqtt_start(void);
-void mqtt_enviar_mensagem(char *topico, char *mensagem);
+void mqtt_enviar(char *topico, char *mensagem);
+mqtt_t mqtt_receber(void);
 
-extern void mqtt_liga_motor(void);
-extern void mqtt_desliga_motor(void);
-
-#endif // __MQTT_H__
+#endif  // __MQTT_H__

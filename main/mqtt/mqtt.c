@@ -20,6 +20,7 @@
 #define TAG "MQTT"
 
 esp_mqtt_client_handle_t client;
+static mqtt_t mqtt;
 
 // Analisar a string JSON e retorna uma struct
 static mqtt_t mqtt_parse_json_str(const char *jsonString) {
@@ -38,7 +39,7 @@ static mqtt_t mqtt_parse_json_str(const char *jsonString) {
         memcpy(msg_struct.msg, msg->valuestring, sizeof(msg_struct.msg));
     } else {
         fprintf(stderr, "Campos de JSON ausentes ou invalidos.\n");
-        //TODO: tratar campos faltantes
+        // TODO: tratar campos faltantes
     }
 
     cJSON_Delete(msg_json);
@@ -53,10 +54,7 @@ static void mqtt_log_erro(const char *message, int error_code) {
 static void mqtt_tratar_msg_rx(const char *mensagem, uint16_t len) {
     char *nova_msg = "";
     memcpy(nova_msg, mensagem, len);
-    mqtt_t msg = mqtt_parse_json_str(nova_msg);
-
-    printf("ID: %d\n", msg.id);
-    printf("Msg: %s\n", msg.msg);
+    mqtt = mqtt_parse_json_str(nova_msg);
 }
 
 static esp_err_t mqtt_event_handler_cb(esp_mqtt_event_handle_t event) {
@@ -65,7 +63,7 @@ static esp_err_t mqtt_event_handler_cb(esp_mqtt_event_handle_t event) {
     switch (event->event_id) {
         case MQTT_EVENT_CONNECTED:
             ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED");
-            xSemaphoreGive(semaph_con_mqtt);
+            xSemaphoreGive(semaph_mqtt_con);
             msg_id = esp_mqtt_client_subscribe(client, "servidor/resposta", 0);
             ESP_LOGI(TAG, "Mensagem recebida, ID: %d\r\n", msg_id);
             break;
@@ -84,6 +82,7 @@ static esp_err_t mqtt_event_handler_cb(esp_mqtt_event_handle_t event) {
             printf("TOPICO=%.*s\r\n", event->topic_len, event->topic);
             printf("RxD=%.*s\r\n", event->data_len, event->data);
             mqtt_tratar_msg_rx(event->data, event->data_len);
+            xSemaphoreGive(semaph_mqtt_rx);
 
             // se event->data for igual a ligar_motor, printf(ligar motor)
             // if (strncmp(event->data, "ligar_motor", event->data_len) == 0) {
@@ -102,7 +101,8 @@ static esp_err_t mqtt_event_handler_cb(esp_mqtt_event_handle_t event) {
                 mqtt_log_erro("Reportado pela stack tls", event->error_handle->esp_tls_stack_err);
                 mqtt_log_erro("Capturado como numero do erro do soquete de transporte",
                               event->error_handle->esp_transport_sock_errno);
-                ESP_LOGI(TAG, "Ultimo erro (%s)", strerror(event->error_handle->esp_transport_sock_errno));
+                ESP_LOGI(TAG, "Ultimo erro (%s)",
+                         strerror(event->error_handle->esp_transport_sock_errno));
             }
             break;
         default: ESP_LOGI(TAG, "Outro evento id:%d", event->event_id); break;
@@ -117,7 +117,8 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
 }
 
 void mqtt_start(void) {
-    semaph_con_mqtt = xSemaphoreCreateBinary();
+    semaph_mqtt_con = xSemaphoreCreateBinary();
+    semaph_mqtt_rx = xSemaphoreCreateBinary();
 
     esp_mqtt_client_config_t mqtt_cfg = {
         .host = "irrigacao.jgtche.com.br",
@@ -131,7 +132,11 @@ void mqtt_start(void) {
     esp_mqtt_client_start(client);
 }
 
-void mqtt_enviar_mensagem(char *topico, char *mensagem) {
+void mqtt_enviar(char *topico, char *mensagem) {
     int msg_id = esp_mqtt_client_publish(client, topico, mensagem, 0, 1, 0);
     printf("Mensagem enviada, ID: %d\r\n", msg_id);
+}
+
+mqtt_t mqtt_receber(void) {
+    return mqtt;
 }

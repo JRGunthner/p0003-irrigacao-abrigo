@@ -9,8 +9,8 @@ extern "C" {
 #include <stdint.h>
 #include <string.h>
 
-xSemaphoreHandle semaph_con_wifi;
-xSemaphoreHandle semaph_con_sntp;
+xSemaphoreHandle semaph_wifi_con;
+xSemaphoreHandle semaph_sntp_con;
 
 void wifi_init(const char *wifi_ssid, const char *wifi_pass);
 

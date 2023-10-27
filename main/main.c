@@ -4,21 +4,9 @@
 #include "freertos/semphr.h"
 #include "freertos/queue.h"
 
-#include "esp_system.h"
-#include "esp_event.h"
-#include "esp_log.h"
-#include "esp_attr.h"
-#include "esp_sntp.h"
-#include "esp_netif.h"
-#include "esp_err.h"
-
 #include "driver/gpio.h"
 #include "nvs_flash.h"
 #include "bme280.h"
-
-#include "lwip/sockets.h"
-#include "lwip/dns.h"
-#include "lwip/netdb.h"
 
 #include "inversor.h"
 #include "sens_tpu.h"
@@ -28,6 +16,8 @@
 #include "sntp.h"
 
 xTaskHandle xHandle_mqttInitTask = NULL;
+xTaskHandle xHandle_mqttRxTask = NULL;
+xTaskHandle xHandle_mqttTxTask = NULL;
 xTaskHandle xHandle_mainTask = NULL;
 xTaskHandle xHandle_sntpTask = NULL;
 
@@ -57,14 +47,14 @@ void rele_start_stop(uint8_t rele, bool estado) {
     gpio_set_level(rele, estado);
 }
 
-#define RELE_DESACIONA_LIGA rele_start_stop(RELE_1, 0)
-#define RELE_DESACIONA_DESL rele_start_stop(RELE_1, 1)
-#define RELE_ACIONA_LIGA rele_start_stop(RELE_2, 0)
-#define RELE_ACIONA_DESL rele_start_stop(RELE_2, 1)
+#define RELE_DESACIONA_LIGA      rele_start_stop(RELE_1, 0)
+#define RELE_DESACIONA_DESL      rele_start_stop(RELE_1, 1)
+#define RELE_ACIONA_LIGA         rele_start_stop(RELE_2, 0)
+#define RELE_ACIONA_DESL         rele_start_stop(RELE_2, 1)
 #define RELE_SAIDA_INVERSOR_LIGA rele_start_stop(RELE_3, 0)
 #define RELE_SAIDA_INVERSOR_DESL rele_start_stop(RELE_3, 1)
-#define RELE_SELECAO_MANUAL   rele_start_stop(RELE_4, 0)
-#define RELE_SELECAO_INVERSOR rele_start_stop(RELE_4, 1)
+#define RELE_SELECAO_MANUAL      rele_start_stop(RELE_4, 0)
+#define RELE_SELECAO_INVERSOR    rele_start_stop(RELE_4, 1)
 
 void delay_s(uint16_t segundos) {
     vTaskDelay((segundos * 1000) / portTICK_PERIOD_MS);
@@ -74,7 +64,7 @@ void delay_ms(uint16_t milisegundos) {
     vTaskDelay(milisegundos / portTICK_PERIOD_MS);
 }
 
-void aciona_aspersor (uint16_t tempo) {
+void aciona_aspersor(uint16_t tempo) {
     RELE_SAIDA_INVERSOR_LIGA;
     delay_ms(300);
     motor_liga();
@@ -101,17 +91,6 @@ void ligar_no_horario(uint8_t hh, uint8_t mm, uint8_t ss, uint16_t tempo) {
         aciona_aspersor(tempo);
 }
 
-void mqtt_liga_motor(void) {
-    delay_ms(100);
-    aciona_aspersor(150);
-}
-
-void mqtt_desliga_motor(void) {
-    motor_desliga();
-    delay_s(6);
-    RELE_SAIDA_INVERSOR_DESL;
-}
-
 static void vMainTask(void *pvParameters) {
     // Inicialização dos relés
     RELE_DESACIONA_DESL;
@@ -121,10 +100,10 @@ static void vMainTask(void *pvParameters) {
 
     // Seleciona comando manual. Ativa as botoeiras e
     // não permite acionamento pelo inversor
-    //RELE_SELECAO_MANUAL;
+    // RELE_SELECAO_MANUAL;
 
     while (1) {
-        uint16_t tempo_irrigacao = 150; // Em segundos
+        uint16_t tempo_irrigacao = 150;  // Em segundos
 
         if (botao_ent()) {
             delay_ms(100);
@@ -146,10 +125,9 @@ static void vMainTask(void *pvParameters) {
             RELE_SAIDA_INVERSOR_DESL;
         }
 
-        //ligar_no_horario( 0, 0, 15, tempo_irrigacao);
-        ligar_no_horario( 7, 0, 0, tempo_irrigacao);
-        ligar_no_horario( 8, 0, 0, tempo_irrigacao);
-        ligar_no_horario( 9, 0, 0, tempo_irrigacao);
+        ligar_no_horario(7, 0, 0, tempo_irrigacao);
+        ligar_no_horario(8, 0, 0, tempo_irrigacao);
+        ligar_no_horario(9, 0, 0, tempo_irrigacao);
         ligar_no_horario(10, 0, 0, tempo_irrigacao);
         ligar_no_horario(11, 0, 0, tempo_irrigacao);
         ligar_no_horario(12, 0, 0, tempo_irrigacao);
@@ -164,7 +142,7 @@ static void vMainTask(void *pvParameters) {
 
 static void vMqttInitTask(void *pvParameters) {
     while (1) {
-        if (xSemaphoreTake(semaph_con_wifi, portMAX_DELAY)) {
+        if (xSemaphoreTake(semaph_wifi_con, portMAX_DELAY)) {
             printf("Conectado ao WiFi!\r\n");
             mqtt_start();
         }
@@ -173,29 +151,40 @@ static void vMqttInitTask(void *pvParameters) {
 }
 
 static void vMqttTxTask(void *pvParameters) {
-    char mensagem[50];
+    //char mensagem[50];
 
-    if (xSemaphoreTake(semaph_con_mqtt, portMAX_DELAY)) {
+    if (xSemaphoreTake(semaph_mqtt_con, portMAX_DELAY)) {
         while (1) {
-            float temperatura = 20.0 + (float)rand()/(float)(RAND_MAX/10.0);
-            sprintf(mensagem, "temperatura: %.2f", temperatura);
-            mqtt_enviar_mensagem("sensores/temperatura", mensagem);
+            // float temperatura = 20.0 + (float)rand() / (float)(RAND_MAX / 10.0);
+            // sprintf(mensagem, "temperatura: %.2f", temperatura);
+            // mqtt_enviar("sensores/temperatura", mensagem);
             delay_s(3);
         }
         vTaskDelete(NULL);
     }
 }
 
+static void vMqttRxTask(void *pvParameters) {
+    while (1) {
+        if (xSemaphoreTake(semaph_mqtt_rx, portMAX_DELAY)) {
+            mqtt_t mqtt_rx = mqtt_receber();
+            printf("ID: %d\r\n", mqtt_rx.id);
+            printf("Msg: %s\r\n", mqtt_rx.msg);
+        }
+    }
+    vTaskDelete(NULL);
+}
+
 static void vSntpTask(void *pvParameters) {
     while (1) {
-        if (xSemaphoreTake(semaph_con_sntp, portMAX_DELAY)) {
+        if (xSemaphoreTake(semaph_sntp_con, portMAX_DELAY)) {
             sntp_start();
             while (1) {
                 struct tm tempo = sntp_pegar_data_hora();
                 char strftime_buf[64];
 
                 strftime(strftime_buf, sizeof(strftime_buf), "%c", &tempo);
-                //printf("Data/hora atual: %s\r\n", strftime_buf);
+                // printf("Data/hora atual: %s\r\n", strftime_buf);
 
                 vTaskDelay(1000 / portTICK_PERIOD_MS);
             }
@@ -221,12 +210,7 @@ void app_main(void) {
     rele_init();
     wifi_init("Visitantes", "12345678");
 
-    xTaskCreate(vMqttInitTask,
-                "vMqttInitTask",
-                4096,
-                NULL,
-                tskIDLE_PRIORITY,
-                xHandle_mqttInitTask);
+    xTaskCreate(vMqttInitTask, "vMqttInitTask", 4096, NULL, tskIDLE_PRIORITY, xHandle_mqttInitTask);
 
     xTaskCreate(vMainTask,
                 "vMainTask",
@@ -242,12 +226,19 @@ void app_main(void) {
                 tskIDLE_PRIORITY,
                 xHandle_sntpTask);
 
-    // xTaskCreate(vMqttTxTask,
-    //             "vMqttTxTask",
-    //             4096,
-    //             NULL,
-    //             tskIDLE_PRIORITY,
-    //             NULL);
+    xTaskCreate(vMqttRxTask,
+                "vMqttRxTask",
+                4096,
+                NULL,
+                tskIDLE_PRIORITY,
+                xHandle_mqttRxTask);
+
+    xTaskCreate(vMqttTxTask,
+                "vMqttTxTask",
+                4096,
+                NULL,
+                tskIDLE_PRIORITY,
+                xHandle_mqttTxTask);
 
     // xTaskCreate(vBme280Task,
     //             "vBme280Task",

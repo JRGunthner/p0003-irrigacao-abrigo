@@ -31,6 +31,7 @@
         "ranges": "c",
         "span": "c",
         "vector": "c",
-        "xstring": "c"
+        "xstring": "c",
+        "sockets.h": "c"
     }
 }
