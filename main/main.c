@@ -165,17 +165,25 @@ static void vMainTask(void *pvParameters) {
             aspersor_desligar();
         }
 
-        ligar_no_horario(7, 0, 0, tempo_irrigacao);
-        ligar_no_horario(8, 0, 0, tempo_irrigacao);
-        ligar_no_horario(9, 0, 0, tempo_irrigacao);
-        ligar_no_horario(10, 0, 0, tempo_irrigacao);
-        ligar_no_horario(11, 0, 0, tempo_irrigacao);
-        ligar_no_horario(12, 0, 0, tempo_irrigacao);
-        ligar_no_horario(13, 0, 0, tempo_irrigacao);
-        ligar_no_horario(14, 0, 0, tempo_irrigacao);
-        ligar_no_horario(15, 0, 0, tempo_irrigacao);
-        ligar_no_horario(16, 0, 0, tempo_irrigacao);
-        ligar_no_horario(17, 0, 0, tempo_irrigacao);
+        uint8_t horarios[][3] = {
+            {7, 0, 0},
+            {8, 0, 0},
+            {9, 0, 0},
+            {10, 0, 0},
+            {11, 0, 0},
+            {12, 0, 0},
+            {13, 0, 0},
+            {14, 0, 0},
+            {15, 0, 0},
+            {16, 0, 0},
+            {17, 0, 0}
+        };
+
+        uint8_t horarios_len = sizeof(horarios) / sizeof(horarios[0]);
+
+        for (int i = 0; i < horarios_len; i++) {
+            ligar_no_horario(horarios[i][0], horarios[i][1], horarios[i][2], tempo_irrigacao);
+        }
     }
     vTaskDelete(NULL);
 }

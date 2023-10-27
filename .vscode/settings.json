@@ -33,6 +33,7 @@
         "vector": "c",
         "xstring": "c",
         "sockets.h": "c",
-        "semphr.h": "c"
+        "semphr.h": "c",
+        "event_groups.h": "c"
     }
 }
