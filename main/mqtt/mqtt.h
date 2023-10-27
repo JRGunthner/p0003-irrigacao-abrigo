@@ -5,6 +5,12 @@
 #include <stdint.h>
 #include <string.h>
 #include <stddef.h>
+#include <stdlib.h>
+
+typedef struct {
+    uint32_t id;
+    char msg[256];
+} mqtt_t;
 
 xSemaphoreHandle semaph_con_mqtt;
 

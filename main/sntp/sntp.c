@@ -28,7 +28,7 @@ static void sntp_obter_data_hora(void) {
     int retry = 0;
     const int retry_count = 10;
     while (sntp_get_sync_status() == SNTP_SYNC_STATUS_RESET && ++retry < retry_count) {
-        printf("Esperando a hora do sistema ser ajustada... (%d/%d)\r\n", retry, retry_count);        
+        printf("Ajustando hora do sistema... (%d/%d)\r\n", retry, retry_count);        
         vTaskDelay(2000 / portTICK_PERIOD_MS);
     }
     time(&now);

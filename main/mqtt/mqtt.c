@@ -13,6 +13,7 @@
 
 #include "esp_log.h"
 #include "mqtt_client.h"
+#include "cJSON.h"
 
 #include "mqtt.h"
 
@@ -20,9 +21,42 @@
 
 esp_mqtt_client_handle_t client;
 
-static void log_error_if_nonzero(const char *message, int error_code) {
+// Analisar a string JSON e retorna uma struct
+static mqtt_t mqtt_parse_json_str(const char *jsonString) {
+    cJSON *msg_json = cJSON_Parse(jsonString);
+    if (msg_json == NULL) {
+        fprintf(stderr, "Erro ao analisar JSON.\n");
+        exit(1);
+    }
+
+    mqtt_t msg_struct;
+    cJSON *id = cJSON_GetObjectItem(msg_json, "id");
+    cJSON *msg = cJSON_GetObjectItem(msg_json, "msg");
+
+    if (id && msg) {
+        msg_struct.id = id->valueint;
+        memcpy(msg_struct.msg, msg->valuestring, sizeof(msg_struct.msg));
+    } else {
+        fprintf(stderr, "Campos de JSON ausentes ou invalidos.\n");
+        //TODO: tratar campos faltantes
+    }
+
+    cJSON_Delete(msg_json);
+    return msg_struct;
+}
+
+static void mqtt_log_erro(const char *message, int error_code) {
     if (error_code != 0)
-        ESP_LOGE(TAG, "Last error %s: 0x%x", message, error_code);
+        ESP_LOGE(TAG, "Ultimo erro %s: 0x%x", message, error_code);
+}
+
+static void mqtt_tratar_msg_rx(const char *mensagem, uint16_t len) {
+    char *nova_msg = "";
+    memcpy(nova_msg, mensagem, len);
+    mqtt_t msg = mqtt_parse_json_str(nova_msg);
+
+    printf("ID: %d\n", msg.id);
+    printf("Msg: %s\n", msg.msg);
 }
 
 static esp_err_t mqtt_event_handler_cb(esp_mqtt_event_handle_t event) {
@@ -33,11 +67,9 @@ static esp_err_t mqtt_event_handler_cb(esp_mqtt_event_handle_t event) {
             ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED");
             xSemaphoreGive(semaph_con_mqtt);
             msg_id = esp_mqtt_client_subscribe(client, "servidor/resposta", 0);
-            printf("Mensagem recebida, ID: %d\r\n", msg_id);
+            ESP_LOGI(TAG, "Mensagem recebida, ID: %d\r\n", msg_id);
             break;
-        case MQTT_EVENT_DISCONNECTED:
-            ESP_LOGI(TAG, "MQTT_EVENT_DISCONNECTED");
-            break;
+        case MQTT_EVENT_DISCONNECTED: ESP_LOGI(TAG, "MQTT_EVENT_DISCONNECTED"); break;
         case MQTT_EVENT_SUBSCRIBED:
             ESP_LOGI(TAG, "MQTT_EVENT_SUBSCRIBED, msg_id=%d", event->msg_id);
             break;
@@ -49,36 +81,38 @@ static esp_err_t mqtt_event_handler_cb(esp_mqtt_event_handle_t event) {
             break;
         case MQTT_EVENT_DATA:
             ESP_LOGI(TAG, "MQTT_EVENT_DATA");
-            printf("TOPIC=%.*s\r\n", event->topic_len, event->topic);
+            printf("TOPICO=%.*s\r\n", event->topic_len, event->topic);
             printf("RxD=%.*s\r\n", event->data_len, event->data);
+            mqtt_tratar_msg_rx(event->data, event->data_len);
+
             // se event->data for igual a ligar_motor, printf(ligar motor)
-            if (strncmp(event->data, "ligar_motor", event->data_len) == 0) {
-                printf("Ligar motor\r\n");
-                mqtt_liga_motor();
-            }
-            if (strncmp(event->data, "desligar_motor", event->data_len) == 0) {
-                printf("Desligar motor\r\n");
-                mqtt_desliga_motor();
-            }
+            // if (strncmp(event->data, "ligar_motor", event->data_len) == 0) {
+            //     printf("Ligar motor\r\n");
+            //     mqtt_liga_motor();
+            // }
+            // if (strncmp(event->data, "desligar_motor", event->data_len) == 0) {
+            //     printf("Desligar motor\r\n");
+            //     mqtt_desliga_motor();
+            // }
             break;
         case MQTT_EVENT_ERROR:
             ESP_LOGI(TAG, "MQTT_EVENT_ERROR");
             if (event->error_handle->error_type == MQTT_ERROR_TYPE_TCP_TRANSPORT) {
-                log_error_if_nonzero("reported from esp-tls", event->error_handle->esp_tls_last_esp_err);
-                log_error_if_nonzero("reported from tls stack", event->error_handle->esp_tls_stack_err);
-                log_error_if_nonzero("captured as transport's socket errno",  event->error_handle->esp_transport_sock_errno);
-                ESP_LOGI(TAG, "Last errno string (%s)", strerror(event->error_handle->esp_transport_sock_errno));
+                mqtt_log_erro("Reportado pelo esp-tls", event->error_handle->esp_tls_last_esp_err);
+                mqtt_log_erro("Reportado pela stack tls", event->error_handle->esp_tls_stack_err);
+                mqtt_log_erro("Capturado como numero do erro do soquete de transporte",
+                              event->error_handle->esp_transport_sock_errno);
+                ESP_LOGI(TAG, "Ultimo erro (%s)", strerror(event->error_handle->esp_transport_sock_errno));
             }
             break;
-        default:
-            ESP_LOGI(TAG, "Other event id:%d", event->event_id);
-            break;
+        default: ESP_LOGI(TAG, "Outro evento id:%d", event->event_id); break;
     }
     return ESP_OK;
 }
 
-static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data) {
-    ESP_LOGD(TAG, "Event dispatched from event loop base=%s, event_id=%d", base, event_id);
+static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id,
+                               void *event_data) {
+    ESP_LOGD(TAG, "Evento despachado do loop de eventos base=%s, evento_id=%d", base, event_id);
     mqtt_event_handler_cb(event_data);
 }
 

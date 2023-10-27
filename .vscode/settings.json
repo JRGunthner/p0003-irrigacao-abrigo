@@ -25,6 +25,12 @@
         "queue.h": "c",
         "wifi.h": "c",
         "chrono": "c",
-        "xutility": "c"
+        "xutility": "c",
+        "cjson.h": "c",
+        "task.h": "c",
+        "ranges": "c",
+        "span": "c",
+        "vector": "c",
+        "xstring": "c"
     }
 }

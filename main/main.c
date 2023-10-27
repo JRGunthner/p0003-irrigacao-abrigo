@@ -195,7 +195,7 @@ static void vSntpTask(void *pvParameters) {
                 char strftime_buf[64];
 
                 strftime(strftime_buf, sizeof(strftime_buf), "%c", &tempo);
-                printf("Data/hora atual: %s\r\n", strftime_buf);
+                //printf("Data/hora atual: %s\r\n", strftime_buf);
 
                 vTaskDelay(1000 / portTICK_PERIOD_MS);
             }
