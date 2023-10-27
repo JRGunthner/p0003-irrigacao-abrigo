@@ -221,6 +221,12 @@ error_t verifica_msg_mqtt_rx(mqtt_t mqtt_rx) {
     if (strcmp(mqtt_rx.msg, "tche") == 0) {
         printf("mas tche, ai que eu me refiro\r\n");
         return pdOK;
+    } else if (strcmp(mqtt_rx.msg, "ligar") == 0) {
+        aspersor_ligar(150);
+        return pdOK;
+    } else if (strcmp(mqtt_rx.msg, "desligar") == 0) {
+        aspersor_desligar();
+        return pdOK;
     }
 
     return pdOK;
