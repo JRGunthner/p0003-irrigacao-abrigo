@@ -20,7 +20,7 @@
 #define TAG "MAIN"
 #define DISPOSITIVO_ID 1
 
-tipo_acionamento_t tipo_acionamento = INVERSOR;
+tipo_acionamento_t tipo_acionamento = MANUAL;
 
 xTaskHandle xHandle_mqttInitTask = NULL;
 xTaskHandle xHandle_mqttRxTask = NULL;
@@ -223,9 +223,11 @@ error_t verifica_msg_mqtt_rx(mqtt_t mqtt_rx) {
         return pdOK;
     } else if (strcmp(mqtt_rx.msg, "ligar") == 0) {
         aspersor_ligar(150);
+        mqtt_enviar("resposta/motor", "motor ligado");
         return pdOK;
     } else if (strcmp(mqtt_rx.msg, "desligar") == 0) {
         aspersor_desligar();
+        mqtt_enviar("resposta/motor", "motor desligado");
         return pdOK;
     }
 

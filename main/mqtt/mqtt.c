@@ -26,7 +26,7 @@ static mqtt_t mqtt_parse_json_str(const char *jsonString) {
     cJSON *msg_json = cJSON_Parse(jsonString);
     if (msg_json == NULL) {
         fprintf(stderr, "Erro ao analisar JSON.\n");
-        exit(1);
+        // TODO: tratar verificação do JSON válido
     }
 
     mqtt_t msg_struct;
