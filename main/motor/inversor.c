@@ -6,7 +6,7 @@
 #define MB_PORT_NUM  2
 #define MB_BAUD_RATE 19200
 
-#define MB_RETURN_ON_FALSE(a, err_code, tag, format, ...) do {                              \
+#define MB_RET_ON_FALSE(a, err_code, tag, format, ...) do {                              \
     if (!(a)) {                                                                             \
         ESP_LOGE(tag, "%s(%d): " format, __FUNCTION__, __LINE__ __VA_OPT__(,) __VA_ARGS__); \
         return err_code;                                                                    \
@@ -140,26 +140,26 @@ esp_err_t inversor_init(void) {
     void* master_handler = NULL;
 
     err = mbc_master_init(MB_PORT_SERIAL_MASTER, &master_handler);
-    MB_RETURN_ON_FALSE((master_handler != NULL), ESP_ERR_INVALID_STATE, TAG, "mb controller initialization fail.");
-    MB_RETURN_ON_FALSE((err == ESP_OK), ESP_ERR_INVALID_STATE, TAG, "mb controller initialization fail, returns(0x%x).", (uint32_t)err);
+    MB_RET_ON_FALSE((master_handler != NULL), ESP_ERR_INVALID_STATE, TAG, "mb controller initialization fail.");
+    MB_RET_ON_FALSE((err == ESP_OK), ESP_ERR_INVALID_STATE, TAG, "mb controller initialization fail, returns(0x%x).", (uint32_t)err);
 
     err = mbc_master_setup((void*)&comm);
-    MB_RETURN_ON_FALSE((err == ESP_OK), ESP_ERR_INVALID_STATE, TAG, "mb controller setup fail, returns(0x%x).", (uint32_t)err);
+    MB_RET_ON_FALSE((err == ESP_OK), ESP_ERR_INVALID_STATE, TAG, "mb controller setup fail, returns(0x%x).", (uint32_t)err);
 
     // Set UART pin numbers
     err = uart_set_pin(MB_PORT_NUM, UART_PIN_TX, UART_PIN_RX, UART_PIN_RTS, UART_PIN_NO_CHANGE);
-    MB_RETURN_ON_FALSE((err == ESP_OK), ESP_ERR_INVALID_STATE, TAG, "mb serial set pin failure, uart_set_pin() returned (0x%x).", (uint32_t)err);
+    MB_RET_ON_FALSE((err == ESP_OK), ESP_ERR_INVALID_STATE, TAG, "mb serial set pin failure, uart_set_pin() returned (0x%x).", (uint32_t)err);
 
     err = mbc_master_start();
-    MB_RETURN_ON_FALSE((err == ESP_OK), ESP_ERR_INVALID_STATE, TAG, "mb controller start fail, returns(0x%x).", (uint32_t)err);
+    MB_RET_ON_FALSE((err == ESP_OK), ESP_ERR_INVALID_STATE, TAG, "mb controller start fail, returns(0x%x).", (uint32_t)err);
 
     // Set driver mode to Half Duplex
     err = uart_set_mode(MB_PORT_NUM, UART_MODE_RS485_HALF_DUPLEX);
-    MB_RETURN_ON_FALSE((err == ESP_OK), ESP_ERR_INVALID_STATE, TAG, "mb serial set mode failure, uart_set_mode() returned (0x%x).", (uint32_t)err);
+    MB_RET_ON_FALSE((err == ESP_OK), ESP_ERR_INVALID_STATE, TAG, "mb serial set mode failure, uart_set_mode() returned (0x%x).", (uint32_t)err);
 
     vTaskDelay(5);
     err = mbc_master_set_descriptor(&device_parameters[0], num_device_parameters);
-    MB_RETURN_ON_FALSE((err == ESP_OK), ESP_ERR_INVALID_STATE, TAG, "mb controller set descriptor fail, returns(0x%x).", (uint32_t)err);
+    MB_RET_ON_FALSE((err == ESP_OK), ESP_ERR_INVALID_STATE, TAG, "mb controller set descriptor fail, returns(0x%x).", (uint32_t)err);
     printf("Modbus inicialidado\r\n");
     return err;
 }

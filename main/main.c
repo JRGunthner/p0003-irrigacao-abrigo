@@ -20,7 +20,7 @@
 #define TAG "MAIN"
 #define DISPOSITIVO_ID 1
 
-tipo_acionamento_t tipo_acionamento = MANUAL;
+tipo_acionamento_t tipo_acionamento = INVERSOR;
 
 xTaskHandle xHandle_mqttInitTask = NULL;
 xTaskHandle xHandle_mqttRxTask = NULL;
@@ -184,6 +184,8 @@ static void vMainTask(void *pvParameters) {
         for (int i = 0; i < horarios_len; i++) {
             ligar_no_horario(horarios[i][0], horarios[i][1], horarios[i][2], tempo_irrigacao);
         }
+
+        delay_ms(10);
     }
     vTaskDelete(NULL);
 }
@@ -223,10 +225,12 @@ error_t verifica_msg_mqtt_rx(mqtt_t mqtt_rx) {
         return pdOK;
     } else if (strcmp(mqtt_rx.msg, "ligar") == 0) {
         aspersor_ligar(150);
+        printf("Enviando resposta ao servidor\r\n");
         mqtt_enviar("resposta/motor", "motor ligado");
         return pdOK;
     } else if (strcmp(mqtt_rx.msg, "desligar") == 0) {
         aspersor_desligar();
+        printf("Enviando resposta ao servidor\r\n");
         mqtt_enviar("resposta/motor", "motor desligado");
         return pdOK;
     }
@@ -239,7 +243,6 @@ static void vMqttRxTask(void *pvParameters) {
         if (xSemaphoreTake(semaph_mqtt_rx, portMAX_DELAY))
             verifica_msg_mqtt_rx(mqtt_receber());
     }
-    vTaskDelete(NULL);
 }
 
 static void vSntpTask(void *pvParameters) {
@@ -275,7 +278,8 @@ void app_main(void) {
     i2c_master_init();
     inversor_init();
     rele_init();
-    wifi_init("Visitantes", "12345678");
+    //wifi_init("AQUI_TEM_AGUA_PRO_CHIMARRAO", "masbahtche");
+    wifi_init("ABRIGO", "12345678");
 
     xTaskCreate(vMqttInitTask,
                 "vMqttInitTask",

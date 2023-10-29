@@ -15,16 +15,15 @@
 
 #define WIFI_MAX_TENTATIVAS_RECONEXAO 5
 
-#define WIFI_BIT_CONECTADO            BIT0
-#define WIFI_BIT_FALHA                BIT1
+#define WIFI_BIT_CONECTADO  BIT0
+#define WIFI_BIT_FALHA      BIT1
 
-#define TAG                           "WIFI"
+#define TAG "WIFI"
 
 static EventGroupHandle_t wifi_grupo_eventos;
 static uint16_t cont_tentativas = 0;
 
-static void event_handler(void *arg, esp_event_base_t evento_base, int32_t evento_id,
-                          void *evento_dados) {
+static void event_handler(void *arg, esp_event_base_t evento_base, int32_t evento_id, void *evento_dados) {
     if ((evento_base == WIFI_EVENT) && (evento_id == WIFI_EVENT_STA_START)) {
         esp_wifi_connect();
     } else if ((evento_base == WIFI_EVENT) && (evento_id == WIFI_EVENT_STA_DISCONNECTED)) {
@@ -60,8 +59,7 @@ void wifi_init(const char *wifi_ssid, const char *wifi_pass) {
     ESP_ERROR_CHECK(esp_wifi_init(&init_config));
 
     ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &event_handler, NULL));
-    ESP_ERROR_CHECK(
-        esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &event_handler, NULL));
+    ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &event_handler, NULL));
 
     wifi_config_t config = {.sta = {.ssid = "", .password = ""}};
 
@@ -77,11 +75,9 @@ void wifi_init(const char *wifi_ssid, const char *wifi_pass) {
                                            pdFALSE, pdFALSE, portMAX_DELAY);
 
     if (bits & WIFI_BIT_CONECTADO) {
-        ESP_LOGI(TAG, "Conectado na rede WiFi: %s, senha: %s", config.sta.ssid,
-                 config.sta.password);
+        ESP_LOGI(TAG, "Conectado na rede WiFi: %s, senha: %s", config.sta.ssid, config.sta.password);
     } else if (bits & WIFI_BIT_FALHA) {
-        ESP_LOGI(TAG, "Falha ao conectar na rede WiFi: %s, senha: %s", config.sta.ssid,
-                 config.sta.password);
+        ESP_LOGI(TAG, "Falha ao conectar na rede WiFi: %s, senha: %s", config.sta.ssid, config.sta.password);
     } else {
         ESP_LOGE(TAG, "Evento inesperado.");
     }
