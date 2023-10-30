@@ -77,7 +77,7 @@ void delay_ms(uint16_t milisegundos) {
     vTaskDelay(milisegundos / portTICK_PERIOD_MS);
 }
 
-static error_t motor_ligar_inversor(uint16_t tempo) {
+static error_t motor_ligar_inversor(void) {
     RELE_SAIDA_INVERSOR_LIGA;
     delay_ms(300);
     inversor_ligar_motor();
@@ -106,7 +106,7 @@ static error_t motor_desligar_inversor(void) {
     return pdOK;
 }
 
-static error_t motor_ligar_manual(uint16_t tempo) {
+static error_t motor_ligar_manual(void) {
     RELE_ACIONA_LIGA;
     RELE_DESACIONA_DESL;
     delay_ms(100);
@@ -124,10 +124,13 @@ static error_t motor_desligar_manual(void) {
 
 static error_t aspersor_ligar(uint16_t tempo) {
     printf("Ligando aspersor\r\n");
+
+    motor.tempo = tempo;
+
     if (tipo_acionamento == INVERSOR) {
-        motor_ligar_inversor(tempo);
+        motor_ligar_inversor();
     } else {
-        motor_ligar_manual(tempo);
+        motor_ligar_manual();
     }
     return pdOK;
 }
@@ -150,6 +153,16 @@ void ligar_no_horario(uint8_t hh, uint8_t mm, uint8_t ss, uint16_t tempo) {
 
 static void vMotorTask(void *pvParameters) {
     while (1) {
+        if (motor.estado == LIGADO) {
+            for (uint16_t i = 0; i < (motor.tempo * 10); i++) {
+                if (botao_esc()) {
+                    delay_ms(100);
+                    break;
+                }
+                delay_ms(100);
+            }
+        }
+
         delay_ms(10);
     }
     vTaskDelete(NULL);

@@ -145,6 +145,8 @@ esp_err_t inversor_init(void) {
     };
     void* master_handler = NULL;
 
+    motor.estado = DESLIGADO;
+
     err = mbc_master_init(MB_PORT_SERIAL_MASTER, &master_handler);
     MB_RET_ON_FALSE((master_handler != NULL), ESP_ERR_INVALID_STATE, TAG, "mb controller initialization fail.");
     MB_RET_ON_FALSE((err == ESP_OK), ESP_ERR_INVALID_STATE, TAG, "mb controller initialization fail, returns(0x%x).", (uint32_t)err);
@@ -211,6 +213,8 @@ void inversor_desligar_motor(void) {
     esp_err_t err = ESP_OK;
     const mb_parameter_descriptor_t* param_descriptor = NULL;
 
+    motor.estado = DESLIGANDO;
+
     for (uint16_t cid = 0; (err != ESP_ERR_NOT_FOUND) && cid < MASTER_MAX_CIDS; cid++) {
         err = mbc_master_get_cid_info(cid, &param_descriptor);
 
@@ -240,11 +244,15 @@ void inversor_desligar_motor(void) {
         vTaskDelay(POLL_TIMEOUT_TICS);
     }
     vTaskDelay(UPDATE_CIDS_TIMEOUT_TICS);
+
+    motor.estado = DESLIGADO;
 }
 
 void inversor_ligar_motor(void) {
     esp_err_t err = ESP_OK;
     const mb_parameter_descriptor_t* param_descriptor = NULL;
+
+    motor.estado = LIGANDO;
 
     for (uint16_t cid = 0; (err != ESP_ERR_NOT_FOUND) && cid < MASTER_MAX_CIDS; cid++) {
         err = mbc_master_get_cid_info(cid, &param_descriptor);
@@ -275,4 +283,6 @@ void inversor_ligar_motor(void) {
         vTaskDelay(POLL_TIMEOUT_TICS);
     }
     vTaskDelay(UPDATE_CIDS_TIMEOUT_TICS);
+
+    motor.estado = LIGADO;
 }
