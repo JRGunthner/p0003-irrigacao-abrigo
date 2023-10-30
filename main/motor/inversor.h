@@ -9,6 +9,21 @@ extern "C" {
 #include <stdint.h>
 #include "main.h"
 
+typedef enum {
+    DESLIGADO = 0,
+    LIGADO,
+    DESLIGANDO,
+    LIGANDO
+} estado_motor_t;
+
+typedef struct {
+    estado_motor_t estado;
+    uint16_t rpm;
+    uint16_t tempo;
+} motor_t;
+
+extern motor_t motor;
+
 esp_err_t inversor_init(void);
 void inversor_velocidade_motor(uint16_t rpm);
 void inversor_desligar_motor(void);

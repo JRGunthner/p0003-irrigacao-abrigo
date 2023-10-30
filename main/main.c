@@ -20,6 +20,11 @@
 #define TAG "MAIN"
 #define DISPOSITIVO_ID 1
 
+xSemaphoreHandle semaph_motor_ligar;
+xSemaphoreHandle semaph_motor_desligar;
+
+uint16_t t_irrig = 0;
+
 tipo_acionamento_t tipo_acionamento = INVERSOR;
 
 xTaskHandle xHandle_mqttInitTask = NULL;
@@ -27,6 +32,7 @@ xTaskHandle xHandle_mqttRxTask = NULL;
 xTaskHandle xHandle_mqttTxTask = NULL;
 xTaskHandle xHandle_mainTask = NULL;
 xTaskHandle xHandle_sntpTask = NULL;
+xTaskHandle xHandle_motorTask = NULL;
 
 void rele_init(void) {
     gpio_reset_pin(RELE_1);
@@ -77,18 +83,18 @@ static error_t motor_ligar_inversor(uint16_t tempo) {
     inversor_ligar_motor();
     inversor_velocidade_motor(3470);
 
-    for (uint16_t i = 0; i < (tempo * 10); i++) {
-        if (botao_esc()) {
-            delay_ms(100);
-            break;
-        }
-        delay_ms(100);
-    }
+    // for (uint16_t i = 0; i < (tempo * 10); i++) {
+    //     if (botao_esc()) {
+    //         delay_ms(100);
+    //         break;
+    //     }
+    //     delay_ms(100);
+    // }
 
-    delay_ms(100);
-    inversor_desligar_motor();
-    delay_s(6);
-    RELE_SAIDA_INVERSOR_DESL;
+    // delay_ms(100);
+    // inversor_desligar_motor();
+    // delay_s(6);
+    // RELE_SAIDA_INVERSOR_DESL;
 
     return pdOK;
 }
@@ -140,6 +146,13 @@ void ligar_no_horario(uint8_t hh, uint8_t mm, uint8_t ss, uint16_t tempo) {
     struct tm data_hora = sntp_pegar_data_hora();
     if ((data_hora.tm_hour == hh) && (data_hora.tm_min == mm) && (data_hora.tm_sec == ss))
         aspersor_ligar(tempo);
+}
+
+static void vMotorTask(void *pvParameters) {
+    while (1) {
+        delay_ms(10);
+    }
+    vTaskDelete(NULL);
 }
 
 static void vMainTask(void *pvParameters) {
@@ -281,6 +294,9 @@ void app_main(void) {
     //wifi_init("AQUI_TEM_AGUA_PRO_CHIMARRAO", "masbahtche");
     wifi_init("ABRIGO", "12345678");
 
+    semaph_motor_ligar = xSemaphoreCreateBinary();
+    semaph_motor_desligar = xSemaphoreCreateBinary();
+
     xTaskCreate(vMqttInitTask,
                 "vMqttInitTask",
                 4096,
@@ -315,6 +331,13 @@ void app_main(void) {
                 NULL,
                 tskIDLE_PRIORITY + 2,
                 xHandle_mainTask);
+
+    vTaskCreate(vMotorTask,
+                "vMotorTask",
+                4096,
+                NULL,
+                tskIDLE_PRIORITY,
+                xHandle_motorTask);
 
     // xTaskCreate(vBme280Task,
     //             "vBme280Task",

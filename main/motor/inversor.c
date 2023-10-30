@@ -6,6 +6,12 @@
 #define MB_PORT_NUM  2
 #define MB_BAUD_RATE 19200
 
+motor_t motor = {
+    .estado = DESLIGADO,
+    .rpm = 3470,
+    .tempo = 0
+};
+
 #define MB_RET_ON_FALSE(a, err_code, tag, format, ...) do {                              \
     if (!(a)) {                                                                             \
         ESP_LOGE(tag, "%s(%d): " format, __FUNCTION__, __LINE__ __VA_OPT__(,) __VA_ARGS__); \
