@@ -16,16 +16,20 @@ typedef enum {
     LIGANDO
 } estado_motor_t;
 
+typedef enum {
+    NENHUMA = 0,
+    DESLIGAR,
+    LIGAR
+} acao_motor_t;
+
 typedef struct {
     estado_motor_t estado;
+    acao_motor_t acao;
     uint16_t rpm;
     uint16_t tempo;
 } motor_t;
 
 extern motor_t motor;
-
-xSemaphoreHandle semaph_motor_ligar;
-xSemaphoreHandle semaph_motor_desligar;
 
 esp_err_t inversor_init(void);
 void inversor_velocidade_motor(uint16_t rpm);

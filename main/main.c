@@ -20,7 +20,7 @@
 #define TAG "MAIN"
 #define DISPOSITIVO_ID 1
 
-tipo_acionamento_t tipo_acionamento = MANUAL;
+tipo_acionamento_t tipo_acionamento = INVERSOR;
 
 xTaskHandle xHandle_mqttInitTask = NULL;
 xTaskHandle xHandle_mqttRxTask = NULL;
@@ -77,20 +77,6 @@ static error_t motor_ligar_inversor(void) {
     delay_ms(300);
     inversor_ligar_motor();
     inversor_velocidade_motor(3470);
-
-    // for (uint16_t i = 0; i < (tempo * 10); i++) {
-    //     if (botao_esc()) {
-    //         delay_ms(100);
-    //         break;
-    //     }
-    //     delay_ms(100);
-    // }
-
-    // delay_ms(100);
-    // inversor_desligar_motor();
-    // delay_s(6);
-    // RELE_SAIDA_INVERSOR_DESL;
-
     return pdOK;
 }
 
@@ -102,6 +88,7 @@ static error_t motor_desligar_inversor(void) {
 }
 
 static error_t motor_ligar_manual(void) {
+    motor.acao = LIGAR;
     RELE_ACIONA_LIGA;
     RELE_DESACIONA_DESL;
     delay_ms(100);
@@ -111,6 +98,7 @@ static error_t motor_ligar_manual(void) {
 }
 
 static error_t motor_desligar_manual(void) {
+    motor.acao = DESLIGAR;
     RELE_DESACIONA_LIGA;
     RELE_ACIONA_DESL;
     delay_ms(100);
@@ -121,9 +109,6 @@ static error_t motor_desligar_manual(void) {
 
 static error_t aspersor_ligar(uint16_t tempo) {
     printf("Ligando aspersor\r\n");
-
-    motor.tempo = tempo;
-
     if (tipo_acionamento == INVERSOR) {
         motor_ligar_inversor();
     } else {
@@ -157,15 +142,16 @@ static void vMotorTask(void *pvParameters) {
                     break;
                 }
 
-                if (motor.estado == DESLIGADO)
+                if (motor.acao == DESLIGAR)
                     break;
 
-                printf("MOTOR LIGADO\r\n");
+                printf("MOTOR LIGADO %d/%d\r\n", i, motor.tempo);
 
                 delay_s(1);
             }
             aspersor_desligar();
         }
+        motor.acao = NENHUMA;
         delay_ms(10);
     }
     vTaskDelete(NULL);
@@ -184,14 +170,13 @@ static void vMainTask(void *pvParameters) {
         RELE_SELECAO_MANUAL;
 
     while (1) {
-        uint16_t tempo_irrigacao = 150;  // Em segundos
-
         if (botao_ent()) {
             delay_ms(100);
-            aspersor_ligar(tempo_irrigacao);
+            motor.acao = LIGAR;
+            aspersor_ligar(motor.tempo);
         } else if (botao_esc()) {
+            motor.acao = DESLIGAR;
             delay_ms(100);
-            aspersor_desligar();
         }
 
         uint8_t horarios[][3] = {
@@ -211,7 +196,7 @@ static void vMainTask(void *pvParameters) {
         uint8_t horarios_len = sizeof(horarios) / sizeof(horarios[0]);
 
         for (int i = 0; i < horarios_len; i++) {
-            ligar_no_horario(horarios[i][0], horarios[i][1], horarios[i][2], tempo_irrigacao);
+            ligar_no_horario(horarios[i][0], horarios[i][1], horarios[i][2], motor.tempo);
         }
 
         delay_ms(10);
@@ -253,12 +238,12 @@ error_t verifica_msg_mqtt_rx(mqtt_t mqtt_rx) {
         printf("mas tche, ai que eu me refiro\r\n");
         return pdOK;
     } else if (strcmp(mqtt_rx.msg, "ligar") == 0) {
-        aspersor_ligar(150);
+        aspersor_ligar(motor.tempo);
         printf("Enviando resposta ao servidor\r\n");
         mqtt_enviar("resposta/motor", "motor ligado");
         return pdOK;
     } else if (strcmp(mqtt_rx.msg, "desligar") == 0) {
-        aspersor_desligar();
+        motor.acao = DESLIGAR;
         printf("Enviando resposta ao servidor\r\n");
         mqtt_enviar("resposta/motor", "motor desligado");
         return pdOK;
@@ -307,9 +292,11 @@ void app_main(void) {
     i2c_master_init();
     inversor_init();
     rele_init();
-    wifi_init("AQUI_TEM_AGUA_PRO_CHIMARRAO", "masbahtche");
-    //wifi_init("ABRIGO", "12345678");
+    //wifi_init("AQUI_TEM_AGUA_PRO_CHIMARRAO", "masbahtche");
+    wifi_init("ABRIGO", "12345678");
     //wifi_init("Visitantes", "12345678");
+
+    motor.tempo = 15;
 
     xTaskCreate(vMqttInitTask,
                 "vMqttInitTask",
