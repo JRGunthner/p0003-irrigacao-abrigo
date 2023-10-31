@@ -102,20 +102,20 @@ static error_t motor_desligar_inversor(void) {
 }
 
 static error_t motor_ligar_manual(void) {
-    xSemaphoreGive(semaph_motor_ligar);
     RELE_ACIONA_LIGA;
     RELE_DESACIONA_DESL;
     delay_ms(100);
     RELE_ACIONA_DESL;
+    motor.estado = LIGADO;
     return pdOK;
 }
 
 static error_t motor_desligar_manual(void) {
-    xSemaphoreGive(semaph_motor_desligar);
     RELE_DESACIONA_LIGA;
     RELE_ACIONA_DESL;
     delay_ms(100);
     RELE_DESACIONA_DESL;
+    motor.estado = DESLIGADO;
     return pdOK;
 }
 
@@ -150,14 +150,14 @@ void ligar_no_horario(uint8_t hh, uint8_t mm, uint8_t ss, uint16_t tempo) {
 
 static void vMotorTask(void *pvParameters) {
     while (1) {
-        if (xSemaphoreTake(semaph_motor_ligar, portMAX_DELAY)) {
+        if (motor.estado == LIGADO) {
             for (uint16_t i = 0; i < (motor.tempo); i++) {
                 if (botao_esc()) {
                     delay_ms(100);
                     break;
                 }
 
-                if (xSemaphoreTake(semaph_motor_desligar, portMAX_DELAY))
+                if (motor.estado == DESLIGADO)
                     break;
 
                 printf("MOTOR LIGADO\r\n");
@@ -166,6 +166,7 @@ static void vMotorTask(void *pvParameters) {
             }
             aspersor_desligar();
         }
+        delay_ms(10);
     }
     vTaskDelete(NULL);
 }
@@ -308,9 +309,7 @@ void app_main(void) {
     rele_init();
     wifi_init("AQUI_TEM_AGUA_PRO_CHIMARRAO", "masbahtche");
     //wifi_init("ABRIGO", "12345678");
-
-    semaph_motor_ligar = xSemaphoreCreateBinary();
-    semaph_motor_desligar = xSemaphoreCreateBinary();
+    //wifi_init("Visitantes", "12345678");
 
     xTaskCreate(vMqttInitTask,
                 "vMqttInitTask",
