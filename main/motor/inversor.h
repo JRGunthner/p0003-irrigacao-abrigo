@@ -24,6 +24,9 @@ typedef struct {
 
 extern motor_t motor;
 
+xSemaphoreHandle semaph_motor_ligar;
+xSemaphoreHandle semaph_motor_desligar;
+
 esp_err_t inversor_init(void);
 void inversor_velocidade_motor(uint16_t rpm);
 void inversor_desligar_motor(void);

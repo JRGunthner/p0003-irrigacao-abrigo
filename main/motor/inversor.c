@@ -1,3 +1,7 @@
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "freertos/event_groups.h"
+#include "freertos/semphr.h"
 #include "inversor.h"
 #include "modbus_params.h"
 #include "mbcontroller.h"
@@ -146,6 +150,9 @@ esp_err_t inversor_init(void) {
     void* master_handler = NULL;
 
     motor.estado = DESLIGADO;
+    
+    semaph_motor_ligar = xSemaphoreCreateBinary();
+    semaph_motor_desligar = xSemaphoreCreateBinary();
 
     err = mbc_master_init(MB_PORT_SERIAL_MASTER, &master_handler);
     MB_RET_ON_FALSE((master_handler != NULL), ESP_ERR_INVALID_STATE, TAG, "mb controller initialization fail.");
@@ -245,6 +252,7 @@ void inversor_desligar_motor(void) {
     }
     vTaskDelay(UPDATE_CIDS_TIMEOUT_TICS);
 
+    xSemaphoreGive(semaph_motor_desligar);
     motor.estado = DESLIGADO;
 }
 
@@ -284,5 +292,6 @@ void inversor_ligar_motor(void) {
     }
     vTaskDelay(UPDATE_CIDS_TIMEOUT_TICS);
 
+    xSemaphoreGive(semaph_motor_ligar);
     motor.estado = LIGADO;
 }

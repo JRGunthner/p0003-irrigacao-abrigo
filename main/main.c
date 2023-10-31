@@ -20,12 +20,7 @@
 #define TAG "MAIN"
 #define DISPOSITIVO_ID 1
 
-xSemaphoreHandle semaph_motor_ligar;
-xSemaphoreHandle semaph_motor_desligar;
-
-uint16_t t_irrig = 0;
-
-tipo_acionamento_t tipo_acionamento = INVERSOR;
+tipo_acionamento_t tipo_acionamento = MANUAL;
 
 xTaskHandle xHandle_mqttInitTask = NULL;
 xTaskHandle xHandle_mqttRxTask = NULL;
@@ -107,6 +102,7 @@ static error_t motor_desligar_inversor(void) {
 }
 
 static error_t motor_ligar_manual(void) {
+    xSemaphoreGive(semaph_motor_ligar);
     RELE_ACIONA_LIGA;
     RELE_DESACIONA_DESL;
     delay_ms(100);
@@ -115,6 +111,7 @@ static error_t motor_ligar_manual(void) {
 }
 
 static error_t motor_desligar_manual(void) {
+    xSemaphoreGive(semaph_motor_desligar);
     RELE_DESACIONA_LIGA;
     RELE_ACIONA_DESL;
     delay_ms(100);
@@ -153,17 +150,22 @@ void ligar_no_horario(uint8_t hh, uint8_t mm, uint8_t ss, uint16_t tempo) {
 
 static void vMotorTask(void *pvParameters) {
     while (1) {
-        if (motor.estado == LIGADO) {
-            for (uint16_t i = 0; i < (motor.tempo * 10); i++) {
+        if (xSemaphoreTake(semaph_motor_ligar, portMAX_DELAY)) {
+            for (uint16_t i = 0; i < (motor.tempo); i++) {
                 if (botao_esc()) {
                     delay_ms(100);
                     break;
                 }
-                delay_ms(100);
-            }
-        }
 
-        delay_ms(10);
+                if (xSemaphoreTake(semaph_motor_desligar, portMAX_DELAY))
+                    break;
+
+                printf("MOTOR LIGADO\r\n");
+
+                delay_s(1);
+            }
+            aspersor_desligar();
+        }
     }
     vTaskDelete(NULL);
 }
@@ -304,8 +306,8 @@ void app_main(void) {
     i2c_master_init();
     inversor_init();
     rele_init();
-    //wifi_init("AQUI_TEM_AGUA_PRO_CHIMARRAO", "masbahtche");
-    wifi_init("ABRIGO", "12345678");
+    wifi_init("AQUI_TEM_AGUA_PRO_CHIMARRAO", "masbahtche");
+    //wifi_init("ABRIGO", "12345678");
 
     semaph_motor_ligar = xSemaphoreCreateBinary();
     semaph_motor_desligar = xSemaphoreCreateBinary();
@@ -345,7 +347,7 @@ void app_main(void) {
                 tskIDLE_PRIORITY + 2,
                 xHandle_mainTask);
 
-    vTaskCreate(vMotorTask,
+    xTaskCreate(vMotorTask,
                 "vMotorTask",
                 4096,
                 NULL,
