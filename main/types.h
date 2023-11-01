@@ -22,7 +22,14 @@ typedef struct {
         char *ssid;
         char *senha;
     } wifi;
+    uint16_t id;
 } app_t;
+
+typedef struct {
+    uint8_t h;
+    uint8_t m;
+    uint8_t s;
+} agenda_t;
 
 #ifdef __cplusplus
 }

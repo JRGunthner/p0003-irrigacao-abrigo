@@ -37,6 +37,7 @@
         "event_groups.h": "c",
         "thread": "c",
         "xlocale": "c",
-        "xiosbase": "c"
+        "xiosbase": "c",
+        "types.h": "c"
     }
 }

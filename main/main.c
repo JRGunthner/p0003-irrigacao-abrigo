@@ -14,11 +14,11 @@
 #include "teclado.h"
 #include "wifi.h"
 #include "mqtt.h"
+#include "rele.h"
 #include "sntp.h"
 #include "types.h"
 
 #define TAG "MAIN"
-#define DISPOSITIVO_ID 1
 
 app_t app;
 
@@ -29,41 +29,6 @@ xTaskHandle xHandle_agendamentoTask = NULL;
 xTaskHandle xHandle_sntpTask = NULL;
 xTaskHandle xHandle_motorTask = NULL;
 xTaskHandle xHandle_tecladoTask = NULL;
-
-void rele_start_stop(uint8_t rele, bool estado) {
-    gpio_set_level(rele, estado);
-}
-
-#define RELE_DESACIONA_LIGA      rele_start_stop(RELE_1, 0)
-#define RELE_DESACIONA_DESL      rele_start_stop(RELE_1, 1)
-#define RELE_ACIONA_LIGA         rele_start_stop(RELE_2, 0)
-#define RELE_ACIONA_DESL         rele_start_stop(RELE_2, 1)
-#define RELE_SAIDA_INVERSOR_LIGA rele_start_stop(RELE_3, 0)
-#define RELE_SAIDA_INVERSOR_DESL rele_start_stop(RELE_3, 1)
-#define RELE_SELECAO_MANUAL      rele_start_stop(RELE_4, 0)
-#define RELE_SELECAO_INVERSOR    rele_start_stop(RELE_4, 1)
-
-void rele_init(void) {
-    gpio_reset_pin(RELE_1);
-    gpio_set_direction(RELE_1, GPIO_MODE_OUTPUT);
-    gpio_set_level(RELE_1, 1);
-
-    gpio_reset_pin(RELE_2);
-    gpio_set_direction(RELE_2, GPIO_MODE_OUTPUT);
-    gpio_set_level(RELE_2, 1);
-
-    gpio_reset_pin(RELE_3);
-    gpio_set_direction(RELE_3, GPIO_MODE_OUTPUT);
-    gpio_set_level(RELE_3, 1);
-
-    gpio_reset_pin(RELE_4);
-    gpio_set_direction(RELE_4, GPIO_MODE_OUTPUT);
-    gpio_set_level(RELE_4, 1);
-
-    gpio_reset_pin(LED_BR);
-    gpio_set_direction(LED_BR, GPIO_MODE_OUTPUT);
-    gpio_set_level(LED_BR, 0);
-}
 
 void delay_s(uint16_t segundos) {
     vTaskDelay((segundos * 1000) / portTICK_PERIOD_MS);
@@ -158,12 +123,6 @@ static void ligar_no_horario(uint8_t hh, uint8_t mm, uint8_t ss, uint16_t tempo)
         aspersor_ligar(tempo);
 }
 
-typedef struct {
-    uint8_t h;
-    uint8_t m;
-    uint8_t s;
-} agenda_t;
-
 static void vAgendamentoTask(void *pvParameters) {
     while (1) {
         agenda_t horarios[] = {
@@ -216,7 +175,7 @@ static void vMqttTxTask(void *pvParameters) {
 }
 
 error_t verifica_msg_mqtt_rx(mqtt_t mqtt_rx) {
-    if (mqtt_rx.id != DISPOSITIVO_ID) {
+    if (mqtt_rx.id != app.id) {
         ESP_LOGE(TAG, "ID invalido!\r\n");
         return pdERROR;
     }
@@ -280,29 +239,26 @@ static void vTecladoTask(void *pvParameters) {
 }
 
 void app_init(void) {
-    // Inicialização dos relés
     RELE_DESACIONA_DESL;
     RELE_ACIONA_DESL;
     RELE_SAIDA_INVERSOR_DESL;
     RELE_SELECAO_INVERSOR;
 
     app.acionamento = INVERSOR;
+    app.id = 1;
+    motor.tempo = 150;
+
+    // app.wifi.ssid = "AQUI_TEM_AGUA_PRO_CHIMARRAO";
+    // app.wifi.senha = "masbahtche";
+    app.wifi.ssid = "ABRIGO";
+    app.wifi.senha = "12345678";
+    // app.wifi.ssid = "Visitantes";
+    // app.wifi.senha = "12345678";
 
     // Seleciona comando manual. Ativa as botoeiras e
     // não permite acionamento pelo inversor
     if (app.acionamento == MANUAL)
         RELE_SELECAO_MANUAL;
-
-    motor.tempo = 150;
-
-    // app.wifi.ssid = "AQUI_TEM_AGUA_PRO_CHIMARRAO";
-    // app.wifi.senha = "masbahtche";
-
-    app.wifi.ssid = "ABRIGO";
-    app.wifi.senha = "12345678";
-
-    // app.wifi.ssid = "Visitantes";
-    // app.wifi.senha = "12345678";
 }
 
 void flash_init(void) {
