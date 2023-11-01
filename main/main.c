@@ -20,14 +20,28 @@
 #define TAG "MAIN"
 #define DISPOSITIVO_ID 1
 
-tipo_acionamento_t tipo_acionamento = INVERSOR;
+tipo_acionamento_t tipo_acionamento = MANUAL;
 
 xTaskHandle xHandle_mqttInitTask = NULL;
 xTaskHandle xHandle_mqttRxTask = NULL;
 xTaskHandle xHandle_mqttTxTask = NULL;
-xTaskHandle xHandle_mainTask = NULL;
+xTaskHandle xHandle_agendamentoTask = NULL;
 xTaskHandle xHandle_sntpTask = NULL;
 xTaskHandle xHandle_motorTask = NULL;
+xTaskHandle xHandle_tecladoTask = NULL;
+
+void rele_start_stop(uint8_t rele, bool estado) {
+    gpio_set_level(rele, estado);
+}
+
+#define RELE_DESACIONA_LIGA      rele_start_stop(RELE_1, 0)
+#define RELE_DESACIONA_DESL      rele_start_stop(RELE_1, 1)
+#define RELE_ACIONA_LIGA         rele_start_stop(RELE_2, 0)
+#define RELE_ACIONA_DESL         rele_start_stop(RELE_2, 1)
+#define RELE_SAIDA_INVERSOR_LIGA rele_start_stop(RELE_3, 0)
+#define RELE_SAIDA_INVERSOR_DESL rele_start_stop(RELE_3, 1)
+#define RELE_SELECAO_MANUAL      rele_start_stop(RELE_4, 0)
+#define RELE_SELECAO_INVERSOR    rele_start_stop(RELE_4, 1)
 
 void rele_init(void) {
     gpio_reset_pin(RELE_1);
@@ -49,20 +63,18 @@ void rele_init(void) {
     gpio_reset_pin(LED_BR);
     gpio_set_direction(LED_BR, GPIO_MODE_OUTPUT);
     gpio_set_level(LED_BR, 0);
-}
 
-void rele_start_stop(uint8_t rele, bool estado) {
-    gpio_set_level(rele, estado);
-}
+    // Inicialização dos relés
+    RELE_DESACIONA_DESL;
+    RELE_ACIONA_DESL;
+    RELE_SAIDA_INVERSOR_DESL;
+    RELE_SELECAO_INVERSOR;
 
-#define RELE_DESACIONA_LIGA      rele_start_stop(RELE_1, 0)
-#define RELE_DESACIONA_DESL      rele_start_stop(RELE_1, 1)
-#define RELE_ACIONA_LIGA         rele_start_stop(RELE_2, 0)
-#define RELE_ACIONA_DESL         rele_start_stop(RELE_2, 1)
-#define RELE_SAIDA_INVERSOR_LIGA rele_start_stop(RELE_3, 0)
-#define RELE_SAIDA_INVERSOR_DESL rele_start_stop(RELE_3, 1)
-#define RELE_SELECAO_MANUAL      rele_start_stop(RELE_4, 0)
-#define RELE_SELECAO_INVERSOR    rele_start_stop(RELE_4, 1)
+    // Seleciona comando manual. Ativa as botoeiras e
+    // não permite acionamento pelo inversor
+    if (tipo_acionamento == MANUAL)
+        RELE_SELECAO_MANUAL;
+}
 
 void delay_s(uint16_t segundos) {
     vTaskDelay((segundos * 1000) / portTICK_PERIOD_MS);
@@ -127,12 +139,6 @@ static error_t aspersor_desligar(void) {
     return pdOK;
 }
 
-void ligar_no_horario(uint8_t hh, uint8_t mm, uint8_t ss, uint16_t tempo) {
-    struct tm data_hora = sntp_pegar_data_hora();
-    if ((data_hora.tm_hour == hh) && (data_hora.tm_min == mm) && (data_hora.tm_sec == ss))
-        aspersor_ligar(tempo);
-}
-
 static void vMotorTask(void *pvParameters) {
     while (1) {
         if (motor.estado == LIGADO) {
@@ -157,29 +163,21 @@ static void vMotorTask(void *pvParameters) {
     vTaskDelete(NULL);
 }
 
-static void vMainTask(void *pvParameters) {
-    // Inicialização dos relés
-    RELE_DESACIONA_DESL;
-    RELE_ACIONA_DESL;
-    RELE_SAIDA_INVERSOR_DESL;
-    RELE_SELECAO_INVERSOR;
+static void ligar_no_horario(uint8_t hh, uint8_t mm, uint8_t ss, uint16_t tempo) {
+    struct tm data_hora = sntp_pegar_data_hora();
+    if ((data_hora.tm_hour == hh) && (data_hora.tm_min == mm) && (data_hora.tm_sec == ss))
+        aspersor_ligar(tempo);
+}
 
-    // Seleciona comando manual. Ativa as botoeiras e
-    // não permite acionamento pelo inversor
-    if (tipo_acionamento == MANUAL)
-        RELE_SELECAO_MANUAL;
+typedef struct {
+    uint8_t h;
+    uint8_t m;
+    uint8_t s;
+} agenda_t;
 
+static void vAgendamentoTask(void *pvParameters) {
     while (1) {
-        if (botao_ent()) {
-            delay_ms(100);
-            motor.acao = LIGAR;
-            aspersor_ligar(motor.tempo);
-        } else if (botao_esc()) {
-            motor.acao = DESLIGAR;
-            delay_ms(100);
-        }
-
-        uint8_t horarios[][3] = {
+        agenda_t horarios[] = {
             {7, 0, 0},
             {8, 0, 0},
             {9, 0, 0},
@@ -196,7 +194,7 @@ static void vMainTask(void *pvParameters) {
         uint8_t horarios_len = sizeof(horarios) / sizeof(horarios[0]);
 
         for (int i = 0; i < horarios_len; i++) {
-            ligar_no_horario(horarios[i][0], horarios[i][1], horarios[i][2], motor.tempo);
+            ligar_no_horario(horarios[i].h, horarios[i].m, horarios[i].s, motor.tempo);
         }
 
         delay_ms(10);
@@ -277,6 +275,21 @@ static void vSntpTask(void *pvParameters) {
     }
 }
 
+static void vTecladoTask(void *pvParameters) {
+    while (1) {
+        if (botao_ent()) {
+            delay_ms(100);
+            motor.acao = LIGAR;
+            aspersor_ligar(motor.tempo);
+        } else if (botao_esc()) {
+            motor.acao = DESLIGAR;
+            delay_ms(100);
+        }
+        delay_ms(10);
+    }
+    vTaskDelete(NULL);
+}
+
 void flash_init(void) {
     esp_err_t ret = nvs_flash_init();
     if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
@@ -326,12 +339,12 @@ void app_main(void) {
                 tskIDLE_PRIORITY,
                 xHandle_mqttTxTask);
 
-    xTaskCreate(vMainTask,
-                "vMainTask",
+    xTaskCreate(vAgendamentoTask,
+                "vAgendamentoTask",
                 4096,
                 NULL,
                 tskIDLE_PRIORITY + 2,
-                xHandle_mainTask);
+                xHandle_agendamentoTask);
 
     xTaskCreate(vMotorTask,
                 "vMotorTask",
@@ -339,6 +352,13 @@ void app_main(void) {
                 NULL,
                 tskIDLE_PRIORITY,
                 xHandle_motorTask);
+
+    xTaskCreate(vTecladoTask,
+                "vTecladoTask",
+                4096,
+                NULL,
+                tskIDLE_PRIORITY,
+                xHandle_tecladoTask);
 
     // xTaskCreate(vBme280Task,
     //             "vBme280Task",
