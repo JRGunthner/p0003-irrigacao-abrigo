@@ -9,17 +9,22 @@ extern "C" {
 #include <stdint.h>
 #include "main.h"
 
-void rele_init(void);
-void rele_start_stop(uint8_t rele, bool estado);
+typedef enum {
+    DESL = 0,
+    LIGA
+} rele_t;
 
-#define RELE_DESACIONA_LIGA      rele_start_stop(RELE_1, 0)
-#define RELE_DESACIONA_DESL      rele_start_stop(RELE_1, 1)
-#define RELE_ACIONA_LIGA         rele_start_stop(RELE_2, 0)
-#define RELE_ACIONA_DESL         rele_start_stop(RELE_2, 1)
-#define RELE_SAIDA_INVERSOR_LIGA rele_start_stop(RELE_3, 0)
-#define RELE_SAIDA_INVERSOR_DESL rele_start_stop(RELE_3, 1)
-#define RELE_SELECAO_MANUAL      rele_start_stop(RELE_4, 0)
-#define RELE_SELECAO_INVERSOR    rele_start_stop(RELE_4, 1)
+void rele_init(void);
+void rele_liga_desl(uint8_t rele, rele_t estado);
+
+#define RELE_DESACIONA_LIGA      rele_liga_desl(RELE_1, DESL)
+#define RELE_DESACIONA_DESL      rele_liga_desl(RELE_1, LIGA)
+#define RELE_ACIONA_LIGA         rele_liga_desl(RELE_2, DESL)
+#define RELE_ACIONA_DESL         rele_liga_desl(RELE_2, LIGA)
+#define RELE_SAIDA_INVERSOR_LIGA rele_liga_desl(RELE_3, DESL)
+#define RELE_SAIDA_INVERSOR_DESL rele_liga_desl(RELE_3, LIGA)
+#define RELE_SELECAO_MANUAL      rele_liga_desl(RELE_4, DESL)
+#define RELE_SELECAO_INVERSOR    rele_liga_desl(RELE_4, LIGA)
 
 #ifdef __cplusplus
 }

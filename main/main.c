@@ -255,8 +255,7 @@ void app_init(void) {
     // app.wifi.ssid = "Visitantes";
     // app.wifi.senha = "12345678";
 
-    // Seleciona comando manual. Ativa as botoeiras e
-    // não permite acionamento pelo inversor
+    // Ativa as botoeiras e não permite acionamento pelo inversor
     if (app.acionamento == MANUAL)
         RELE_SELECAO_MANUAL;
 }

@@ -23,6 +23,6 @@ void rele_init(void) {
     gpio_set_level(LED_BR, 0);
 }
 
-void rele_start_stop(uint8_t rele, bool estado) {
+void rele_liga_desl(uint8_t rele, rele_t estado) {
     gpio_set_level(rele, estado);
 }
