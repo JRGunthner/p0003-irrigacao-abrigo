@@ -9,9 +9,9 @@ extern "C" {
 #include <stdint.h>
 #include "main.h"
 
-void botao_init(void);
-uint8_t botao_ent(void);
-uint8_t botao_esc(void);
+void teclado_init(void);
+uint8_t teclado_btn_ent(void);
+uint8_t teclado_btn_esc(void);
 
 #ifdef __cplusplus
 }

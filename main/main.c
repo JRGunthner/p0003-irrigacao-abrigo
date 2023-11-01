@@ -97,7 +97,7 @@ static void vMotorTask(void *pvParameters) {
     while (1) {
         if (motor.estado == LIGADO) {
             for (uint16_t i = 0; i < (motor.tempo); i++) {
-                if (botao_esc()) {
+                if (teclado_btn_esc()) {
                     delay_ms(100);
                     break;
                 }
@@ -225,11 +225,11 @@ static void vSntpTask(void *pvParameters) {
 
 static void vTecladoTask(void *pvParameters) {
     while (1) {
-        if (botao_ent()) {
+        if (teclado_btn_ent()) {
             delay_ms(100);
             motor.acao = LIGAR;
             aspersor_ligar(motor.tempo);
-        } else if (botao_esc()) {
+        } else if (teclado_btn_esc()) {
             motor.acao = DESLIGAR;
             delay_ms(100);
         }
@@ -272,7 +272,7 @@ void flash_init(void) {
 
 void app_main(void) {
     flash_init();
-    botao_init();
+    teclado_init();
     i2c_master_init();
     inversor_init();
     rele_init();
