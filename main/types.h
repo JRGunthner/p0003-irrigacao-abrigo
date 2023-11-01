@@ -16,6 +16,14 @@ typedef enum {
     MANUAL
 } tipo_acionamento_t;
 
+typedef struct {
+    tipo_acionamento_t acionamento;
+    struct {
+        char *ssid;
+        char *senha;
+    } wifi;
+} app_t;
+
 #ifdef __cplusplus
 }
 #endif

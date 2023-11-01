@@ -20,7 +20,7 @@
 #define TAG "MAIN"
 #define DISPOSITIVO_ID 1
 
-tipo_acionamento_t tipo_acionamento = MANUAL;
+app_t app;
 
 xTaskHandle xHandle_mqttInitTask = NULL;
 xTaskHandle xHandle_mqttRxTask = NULL;
@@ -63,17 +63,6 @@ void rele_init(void) {
     gpio_reset_pin(LED_BR);
     gpio_set_direction(LED_BR, GPIO_MODE_OUTPUT);
     gpio_set_level(LED_BR, 0);
-
-    // Inicialização dos relés
-    RELE_DESACIONA_DESL;
-    RELE_ACIONA_DESL;
-    RELE_SAIDA_INVERSOR_DESL;
-    RELE_SELECAO_INVERSOR;
-
-    // Seleciona comando manual. Ativa as botoeiras e
-    // não permite acionamento pelo inversor
-    if (tipo_acionamento == MANUAL)
-        RELE_SELECAO_MANUAL;
 }
 
 void delay_s(uint16_t segundos) {
@@ -121,7 +110,7 @@ static error_t motor_desligar_manual(void) {
 
 static error_t aspersor_ligar(uint16_t tempo) {
     printf("Ligando aspersor\r\n");
-    if (tipo_acionamento == INVERSOR) {
+    if (app.acionamento == INVERSOR) {
         motor_ligar_inversor();
     } else {
         motor_ligar_manual();
@@ -131,7 +120,7 @@ static error_t aspersor_ligar(uint16_t tempo) {
 
 static error_t aspersor_desligar(void) {
     printf("Desligando aspersor\r\n");
-    if (tipo_acionamento == INVERSOR) {
+    if (app.acionamento == INVERSOR) {
         motor_desligar_inversor();
     } else {
         motor_desligar_manual();
@@ -290,6 +279,32 @@ static void vTecladoTask(void *pvParameters) {
     vTaskDelete(NULL);
 }
 
+void app_init(void) {
+    // Inicialização dos relés
+    RELE_DESACIONA_DESL;
+    RELE_ACIONA_DESL;
+    RELE_SAIDA_INVERSOR_DESL;
+    RELE_SELECAO_INVERSOR;
+
+    app.acionamento = INVERSOR;
+
+    // Seleciona comando manual. Ativa as botoeiras e
+    // não permite acionamento pelo inversor
+    if (app.acionamento == MANUAL)
+        RELE_SELECAO_MANUAL;
+
+    motor.tempo = 150;
+
+    // app.wifi.ssid = "AQUI_TEM_AGUA_PRO_CHIMARRAO";
+    // app.wifi.senha = "masbahtche";
+
+    app.wifi.ssid = "ABRIGO";
+    app.wifi.senha = "12345678";
+
+    // app.wifi.ssid = "Visitantes";
+    // app.wifi.senha = "12345678";
+}
+
 void flash_init(void) {
     esp_err_t ret = nvs_flash_init();
     if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
@@ -305,11 +320,8 @@ void app_main(void) {
     i2c_master_init();
     inversor_init();
     rele_init();
-    //wifi_init("AQUI_TEM_AGUA_PRO_CHIMARRAO", "masbahtche");
-    wifi_init("ABRIGO", "12345678");
-    //wifi_init("Visitantes", "12345678");
-
-    motor.tempo = 15;
+    app_init();
+    wifi_init(app.wifi.ssid, app.wifi.senha);
 
     xTaskCreate(vMqttInitTask,
                 "vMqttInitTask",
