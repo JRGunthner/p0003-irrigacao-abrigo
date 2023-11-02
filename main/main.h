@@ -13,6 +13,8 @@ extern "C" {
 #include <sys/time.h>
 #include "driver/gpio.h"
 
+#define VERSAO 100
+
 #define UART_PIN_TX  GPIO_NUM_11
 #define UART_PIN_RX  GPIO_NUM_10
 #define UART_PIN_RTS GPIO_NUM_9

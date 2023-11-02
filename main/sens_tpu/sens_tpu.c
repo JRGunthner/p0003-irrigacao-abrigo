@@ -10,6 +10,8 @@
 #define I2C_MASTER_ACK  0
 #define I2C_MASTER_NACK 1
 
+sens_tpu_t sens_tpu;
+
 // Initialize I2C communication parameters
 void i2c_master_init(void) {
     i2c_config_t i2c_config = {
@@ -86,12 +88,8 @@ void BME280_delay_msek(uint32_t msek) {
     vTaskDelay(msek / portTICK_PERIOD_MS);
 }
 
-char temperature[12];
-char humidity[10];
-char pressure[10];
-
 // BME280 I2C task
-void vBme280Task(void *params) {
+void vSensTpuTask(void *pvParameters) {
     // BME280 I2C communication structure
     struct bme280_t bme280 = {
         .bus_write = BME280_I2C_bus_write,
@@ -105,9 +103,8 @@ void vBme280Task(void *params) {
     int32_t v_uncomp_temperature_s32;
     int32_t v_uncomp_humidity_s32;
 
-    // Initialize BME280 sensor and set internal parameters
     com_rslt = bme280_init(&bme280);
-    printf("com_rslt %d\n", com_rslt);
+    ESP_LOGI(TAG_BME280, "com_rslt %d\n", com_rslt);
 
     com_rslt += bme280_set_oversamp_pressure(BME280_OVERSAMP_16X);
     com_rslt += bme280_set_oversamp_temperature(BME280_OVERSAMP_2X);
@@ -119,35 +116,31 @@ void vBme280Task(void *params) {
     com_rslt += bme280_set_power_mode(BME280_NORMAL_MODE);
     if (com_rslt == SUCCESS) {
         while (true) {
-            vTaskDelay(1000 / portTICK_PERIOD_MS);
+            vTaskDelay(10000 / portTICK_PERIOD_MS);
 
-            // Read BME280 data
             com_rslt = bme280_read_uncomp_pressure_temperature_humidity(
-                &v_uncomp_pressure_s32, &v_uncomp_temperature_s32, &v_uncomp_humidity_s32);
+                &v_uncomp_pressure_s32,
+                &v_uncomp_temperature_s32,
+                &v_uncomp_humidity_s32
+            );
 
             double temp = bme280_compensate_temperature_double(v_uncomp_temperature_s32);
-            //char temperature[12];
-            sprintf(temperature, "%.2f°C", temp);
+            sprintf(sens_tpu.temp, "%.2f°C", temp);
 
             double press = bme280_compensate_pressure_double(v_uncomp_pressure_s32) / 100; // Pa -> hPa
-            //char pressure[10];
-            sprintf(pressure, "%.2f hPa", press);
+            sprintf(sens_tpu.pres, "%.2fhPa", press);
 
             double hum = bme280_compensate_humidity_double(v_uncomp_humidity_s32);
-            //char humidity[10];
-            sprintf(humidity, "%.2f %%", hum);
+            sprintf(sens_tpu.humi, "%.2f%%", hum);
 
-            // Print BME data
             if (com_rslt == SUCCESS) {
-                // printf("Temperatura %s\n",temperature);
-                // printf("Pressão atm %s\n",pressure);
-                // printf("Umidade atm %s\n",humidity);
+                ESP_LOGI(TAG_BME280, "Temperatura: %s, Pressão: %s, Umidade: %s", sens_tpu.temp, sens_tpu.pres, sens_tpu.humi);
             } else {
-                ESP_LOGE(TAG_BME280, "measure error. code: %d", com_rslt);
+                ESP_LOGE(TAG_BME280, "Falha na medição. Cod: %d", com_rslt);
             }
         }
     } else {
-        ESP_LOGE(TAG_BME280, "init or setting error. code: %d", com_rslt);
+        ESP_LOGE(TAG_BME280, "Falha na inicialização ou configuração. Cod: %d", com_rslt);
     }
 
     while (1) {

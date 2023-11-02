@@ -69,15 +69,9 @@ static struct bme280_t *p_bme280; /**< pointer to BME280 */
  *	make sure your changes will not
  *	affect the reference value of the parameter
  *	(Better case don't change the reference value of the parameter)
- *
- *
- *
- *
  *	@return results of bus communication function
  *	@retval 0 -> Success
  *	@retval -1 -> Error
- *
- *
  */
 BME280_RETURN_FUNCTION_TYPE bme280_init(struct bme280_t *bme280) {
     /* used to return the communication result*/

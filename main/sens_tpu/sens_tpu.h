@@ -10,8 +10,14 @@ extern "C" {
 #include <stdint.h>
 #include "main.h"
 
+typedef struct {
+    char temp[12];
+    char humi[10];
+    char pres[10];
+} sens_tpu_t;
+
 void i2c_master_init(void);
-void vBme280Task(void *params);
+void vSensTpuTask(void *pvParameters);
 
 #ifdef __cplusplus
 }

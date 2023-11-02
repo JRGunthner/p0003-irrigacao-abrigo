@@ -29,6 +29,7 @@ xTaskHandle xHandle_agendamentoTask = NULL;
 xTaskHandle xHandle_sntpTask = NULL;
 xTaskHandle xHandle_motorTask = NULL;
 xTaskHandle xHandle_tecladoTask = NULL;
+xTaskHandle xHandle_sensTpuTask = NULL;
 
 void delay_s(uint16_t segundos) {
     vTaskDelay((segundos * 1000) / portTICK_PERIOD_MS);
@@ -248,10 +249,10 @@ void app_init(void) {
     app.id = 1;
     motor.tempo = 150;
 
-    // app.wifi.ssid = "AQUI_TEM_AGUA_PRO_CHIMARRAO";
-    // app.wifi.senha = "masbahtche";
-    app.wifi.ssid = "ABRIGO";
-    app.wifi.senha = "12345678";
+    app.wifi.ssid = "AQUI_TEM_AGUA_PRO_CHIMARRAO";
+    app.wifi.senha = "masbahtche";
+    // app.wifi.ssid = "ABRIGO";
+    // app.wifi.senha = "12345678";
     // app.wifi.ssid = "Visitantes";
     // app.wifi.senha = "12345678";
 
@@ -277,6 +278,10 @@ void app_main(void) {
     rele_init();
     app_init();
     wifi_init(app.wifi.ssid, app.wifi.senha);
+
+    printf("================================================================\r\n");
+    printf("Central de irrigacao v%d\r\n%s %s\r\n", VERSAO, __DATE__, __TIME__);
+    printf("================================================================\r\n\r\n");
 
     xTaskCreate(vMqttInitTask,
                 "vMqttInitTask",
@@ -327,10 +332,10 @@ void app_main(void) {
                 tskIDLE_PRIORITY,
                 xHandle_tecladoTask);
 
-    // xTaskCreate(vBme280Task,
-    //             "vBme280Task",
-    //             1024,
-    //             NULL,
-    //             tskIDLE_PRIORITY + 5,
-    //             NULL);
+    xTaskCreate(vSensTpuTask,
+                "vSensTpuTask",
+                1024 *5,
+                NULL,
+                tskIDLE_PRIORITY,
+                xHandle_sensTpuTask);
 }
