@@ -17,10 +17,18 @@ typedef enum {
 void rele_init(void);
 void rele_liga_desl(uint8_t rele, rele_t estado);
 
+#ifdef MODO_ABRIGO
 #define RELE_DESACIONA_LIGA      rele_liga_desl(RELE_1, DESL)
 #define RELE_DESACIONA_DESL      rele_liga_desl(RELE_1, LIGA)
 #define RELE_ACIONA_LIGA         rele_liga_desl(RELE_2, DESL)
 #define RELE_ACIONA_DESL         rele_liga_desl(RELE_2, LIGA)
+#else // MODO_MORANGO
+#define RELE_DESACIONA_LIGA      rele_liga_desl(RELE_7, DESL)
+#define RELE_DESACIONA_DESL      rele_liga_desl(RELE_7, LIGA)
+#define RELE_ACIONA_LIGA         rele_liga_desl(RELE_8, DESL)
+#define RELE_ACIONA_DESL         rele_liga_desl(RELE_8, LIGA)
+#endif // MODO_ABRIGO
+
 #define RELE_SAIDA_INVERSOR_LIGA rele_liga_desl(RELE_3, DESL)
 #define RELE_SAIDA_INVERSOR_DESL rele_liga_desl(RELE_3, LIGA)
 #define RELE_SELECAO_MANUAL      rele_liga_desl(RELE_4, DESL)

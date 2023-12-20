@@ -245,14 +245,18 @@ void app_init(void) {
     RELE_SAIDA_INVERSOR_DESL;
     RELE_SELECAO_INVERSOR;
 
+#ifdef MODO_ABRIGO
     app.acionamento = INVERSOR;
+#else
+    app.acionamento = MANUAL;
+#endif
     app.id = 1;
     motor.tempo = 150;
 
-    app.wifi.ssid = "AQUI_TEM_AGUA_PRO_CHIMARRAO";
-    app.wifi.senha = "masbahtche";
-    // app.wifi.ssid = "ABRIGO";
-    // app.wifi.senha = "12345678";
+    // app.wifi.ssid = "AQUI_TEM_AGUA_PRO_CHIMARRAO";
+    // app.wifi.senha = "masbahtche";
+    app.wifi.ssid = "ABRIGO";
+    app.wifi.senha = "12345678";
     // app.wifi.ssid = "Visitantes";
     // app.wifi.senha = "12345678";
 
@@ -272,7 +276,9 @@ void flash_init(void) {
 
 void app_main(void) {
     flash_init();
+#ifdef MODO_ABRIGO
     teclado_init();
+#endif
     i2c_master_init();
     inversor_init();
     rele_init();
@@ -325,12 +331,14 @@ void app_main(void) {
                 tskIDLE_PRIORITY,
                 xHandle_motorTask);
 
+#ifdef MODO_ABRIGO
     xTaskCreate(vTecladoTask,
                 "vTecladoTask",
                 4096,
                 NULL,
                 tskIDLE_PRIORITY,
                 xHandle_tecladoTask);
+#endif
 
     xTaskCreate(vSensTpuTask,
                 "vSensTpuTask",
